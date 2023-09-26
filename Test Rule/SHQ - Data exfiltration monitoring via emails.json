@@ -1,0 +1,73 @@
+{
+    "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentTemplate.json#",
+    "contentVersion": "1.0.0.0",
+    "parameters": {
+        "workspace": {
+            "type": "String"
+        }
+    },
+    "resources": [
+        {
+            "id": "[concat(resourceId('Microsoft.OperationalInsights/workspaces/providers', parameters('workspace'), 'Microsoft.SecurityInsights'),'/alertRules/f1b55503-bad3-428c-95b2-1deeace27702')]",
+            "name": "[concat(parameters('workspace'),'/Microsoft.SecurityInsights/f1b55503-bad3-428c-95b2-1deeace27702')]",
+            "type": "Microsoft.OperationalInsights/workspaces/providers/alertRules",
+            "kind": "Scheduled",
+            "apiVersion": "2022-09-01-preview",
+            "properties": {
+                "displayName": "SHQ - Data exfiltration monitoring via emails",
+                "description": "SHQ - Data exfiltration monitoring via emails",
+                "severity": "Medium",
+                "enabled": true,
+                "query": "EmailAttachmentInfo\r\n| where SenderFromAddress has_any (\"user1@xyz.com\", \"user2@xyz.com\", \"user3@xyz.com\")\r\n| where RecipientEmailAddress !has \"@xyz.com\"\r\n| where FileSize >= 5242880",
+                "queryFrequency": "PT5M",
+                "queryPeriod": "PT5M",
+                "triggerOperator": "GreaterThan",
+                "triggerThreshold": 0,
+                "suppressionDuration": "PT5H",
+                "suppressionEnabled": false,
+                "tactics": [
+                    "Exfiltration"
+                ],
+                "techniques": [],
+                "alertRuleTemplateName": null,
+                "incidentConfiguration": {
+                    "createIncident": true,
+                    "groupingConfiguration": {
+                        "enabled": false,
+                        "reopenClosedIncident": false,
+                        "lookbackDuration": "PT5H",
+                        "matchingMethod": "AllEntities",
+                        "groupByEntities": [],
+                        "groupByAlertDetails": [],
+                        "groupByCustomDetails": []
+                    }
+                },
+                "eventGroupingSettings": {
+                    "aggregationKind": "SingleAlert"
+                },
+                "alertDetailsOverride": null,
+                "customDetails": null,
+                "entityMappings": [
+                    {
+                        "entityType": "Account",
+                        "fieldMappings": [
+                            {
+                                "identifier": "FullName",
+                                "columnName": "SenderDisplayName"
+                            },
+                            {
+                                "identifier": "Name",
+                                "columnName": "FileName"
+                            },
+                            {
+                                "identifier": "DisplayName",
+                                "columnName": "RecipientEmailAddress"
+                            }
+                        ]
+                    }
+                ],
+                "sentinelEntitiesMappings": null
+            }
+        }
+    ]
+}
