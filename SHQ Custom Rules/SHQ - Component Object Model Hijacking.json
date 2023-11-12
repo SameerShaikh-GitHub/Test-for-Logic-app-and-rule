@@ -1,0 +1,87 @@
+{
+    "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentTemplate.json#",
+    "contentVersion": "1.0.0.0",
+    "parameters": {
+        "workspace": {
+            "type": "String"
+        }
+    },
+    "resources": [
+        {
+            "id": "[concat(resourceId('Microsoft.OperationalInsights/workspaces/providers', parameters('workspace'), 'Microsoft.SecurityInsights'),'/alertRules/9e7c2e9d-5f56-4736-abd4-f5d9c5c19bcd')]",
+            "name": "[concat(parameters('workspace'),'/Microsoft.SecurityInsights/9e7c2e9d-5f56-4736-abd4-f5d9c5c19bcd')]",
+            "type": "Microsoft.OperationalInsights/workspaces/providers/alertRules",
+            "kind": "Scheduled",
+            "apiVersion": "2022-11-01-preview",
+            "properties": {
+                "displayName": "SHQ - Component Object Model Hijacking",
+                "description": "The Component Object Model (COM) is a system within Windows to enable interaction between software components through the operating system. Adversaries can use this system to insert malicious code that can be executed in place of legitimate software through hijacking the COM references and relationships as a means for persistence. Hijacking a COM object requires a change in the Windows Registry to replace a reference to a legitimate system component which may cause that component to not work when executed. When that system component is executed through normal system operation the adversary''s code will be executed instead. An adversary is likely to hijack objects that are used frequently enough to maintain a consistent level of persistence, but are unlikely to break noticeable functionality within the system as to avoid system instability that could lead to detection.",
+                "severity": "Medium",
+                "enabled": false,
+                "query": "DeviceEvents\r\n| where RegistryValueData contains \"classes\" and RegistryValueData contains \"clsid\" and RegistryValueData contains \"inprocserver32\" and FolderPath contains \"onedrive\"\r\n| project FileName, DeviceId, DeviceName, ProcessCommandLine",
+                "queryFrequency": "PT5M",
+                "queryPeriod": "PT5M",
+                "triggerOperator": "GreaterThan",
+                "triggerThreshold": 0,
+                "suppressionDuration": "PT5H",
+                "suppressionEnabled": false,
+                "startTimeUtc": null,
+                "tactics": [
+                    "Persistence"
+                ],
+                "techniques": [
+                    "T1577"
+                ],
+                "alertRuleTemplateName": null,
+                "incidentConfiguration": {
+                    "createIncident": true,
+                    "groupingConfiguration": {
+                        "enabled": false,
+                        "reopenClosedIncident": false,
+                        "lookbackDuration": "PT5H",
+                        "matchingMethod": "AllEntities",
+                        "groupByEntities": [],
+                        "groupByAlertDetails": [],
+                        "groupByCustomDetails": []
+                    }
+                },
+                "eventGroupingSettings": {
+                    "aggregationKind": "SingleAlert"
+                },
+                "alertDetailsOverride": null,
+                "customDetails": null,
+                "entityMappings": [
+                    {
+                        "entityType": "Host",
+                        "fieldMappings": [
+                            {
+                                "identifier": "FullName",
+                                "columnName": "DeviceId"
+                            }
+                        ]
+                    },
+                    {
+                        "entityType": "File",
+                        "fieldMappings": [
+                            {
+                                "identifier": "Name",
+                                "columnName": "FileName"
+                            }
+                        ]
+                    },
+                    {
+                        "entityType": "Process",
+                        "fieldMappings": [
+                            {
+                                "identifier": "CommandLine",
+                                "columnName": "ProcessCommandLine"
+                            }
+                        ]
+                    }
+                ],
+                "sentinelEntitiesMappings": null,
+                "templateVersion": null
+            }
+        }
+    ]
+}

@@ -1,0 +1,87 @@
+{
+    "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentTemplate.json#",
+    "contentVersion": "1.0.0.0",
+    "parameters": {
+        "workspace": {
+            "type": "String"
+        }
+    },
+    "resources": [
+        {
+            "id": "[concat(resourceId('Microsoft.OperationalInsights/workspaces/providers', parameters('workspace'), 'Microsoft.SecurityInsights'),'/alertRules/c12bb284-bfde-443f-854b-6915209b3886')]",
+            "name": "[concat(parameters('workspace'),'/Microsoft.SecurityInsights/c12bb284-bfde-443f-854b-6915209b3886')]",
+            "type": "Microsoft.OperationalInsights/workspaces/providers/alertRules",
+            "kind": "Scheduled",
+            "apiVersion": "2022-11-01-preview",
+            "properties": {
+                "displayName": "SHQ - Domain Controllers Enumerated using nltest",
+                "description": "NLTest is a built-in network administration tool. In this query it has been used to gather a list of Domain Controllers. This activity has been seen related to ransomware infections, such as Conti. Establish why this tool is being used to enumerate Domain Controllers.",
+                "severity": "Medium",
+                "enabled": false,
+                "query": "DeviceProcessEvents\r\n| where FileName contains \"nltest.exe\"\r\n| where ProcessCommandLine contains \"dclist\" or ProcessCommandLine contains \"domain_trusts\"\r\n| project DeviceId, DeviceName, FolderPath, ProcessCommandLine",
+                "queryFrequency": "PT5M",
+                "queryPeriod": "PT5M",
+                "triggerOperator": "GreaterThan",
+                "triggerThreshold": 0,
+                "suppressionDuration": "PT5H",
+                "suppressionEnabled": false,
+                "startTimeUtc": null,
+                "tactics": [
+                    "Discovery"
+                ],
+                "techniques": [
+                    "T1087"
+                ],
+                "alertRuleTemplateName": null,
+                "incidentConfiguration": {
+                    "createIncident": true,
+                    "groupingConfiguration": {
+                        "enabled": false,
+                        "reopenClosedIncident": false,
+                        "lookbackDuration": "PT5H",
+                        "matchingMethod": "AllEntities",
+                        "groupByEntities": [],
+                        "groupByAlertDetails": [],
+                        "groupByCustomDetails": []
+                    }
+                },
+                "eventGroupingSettings": {
+                    "aggregationKind": "SingleAlert"
+                },
+                "alertDetailsOverride": null,
+                "customDetails": null,
+                "entityMappings": [
+                    {
+                        "entityType": "Host",
+                        "fieldMappings": [
+                            {
+                                "identifier": "FullName",
+                                "columnName": "DeviceName"
+                            }
+                        ]
+                    },
+                    {
+                        "entityType": "Process",
+                        "fieldMappings": [
+                            {
+                                "identifier": "ProcessId",
+                                "columnName": "ProcessCommandLine"
+                            }
+                        ]
+                    },
+                    {
+                        "entityType": "File",
+                        "fieldMappings": [
+                            {
+                                "identifier": "Name",
+                                "columnName": "FolderPath"
+                            }
+                        ]
+                    }
+                ],
+                "sentinelEntitiesMappings": null,
+                "templateVersion": null
+            }
+        }
+    ]
+}

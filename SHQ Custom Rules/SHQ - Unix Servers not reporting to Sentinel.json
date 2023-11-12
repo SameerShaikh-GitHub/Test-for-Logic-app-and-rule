@@ -1,0 +1,67 @@
+{
+    "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentTemplate.json#",
+    "contentVersion": "1.0.0.0",
+    "parameters": {
+        "workspace": {
+            "type": "String"
+        }
+    },
+    "resources": [
+        {
+            "id": "[concat(resourceId('Microsoft.OperationalInsights/workspaces/providers', parameters('workspace'), 'Microsoft.SecurityInsights'),'/alertRules/d56aec04-372a-4b9c-a0ac-d902b3a9c16c')]",
+            "name": "[concat(parameters('workspace'),'/Microsoft.SecurityInsights/d56aec04-372a-4b9c-a0ac-d902b3a9c16c')]",
+            "type": "Microsoft.OperationalInsights/workspaces/providers/alertRules",
+            "kind": "Scheduled",
+            "apiVersion": "2022-09-01-preview",
+            "properties": {
+                "displayName": "Custom - Unix Servers not reporting to Sentinel",
+                "description": "This alert triggers when there are no logs observed from any of the Unix servers in last 24 hours. Incident details would contain Computer name and Last Timegenerated",
+                "severity": "Medium",
+                "enabled": true,
+                "query": "Syslog\n| summarize LastHeartbeat=max(TimeGenerated) by Computer\n| where LastHeartbeat < ago(1d) and LastHeartbeat > ago(2d)\n| project Computer, LastHeartbeat\n",
+                "queryFrequency": "P1D",
+                "queryPeriod": "P14D",
+                "triggerOperator": "GreaterThan",
+                "triggerThreshold": 0,
+                "suppressionDuration": "PT5H",
+                "suppressionEnabled": false,
+                "tactics": [],
+                "techniques": [],
+                "alertRuleTemplateName": null,
+                "incidentConfiguration": {
+                    "createIncident": true,
+                    "groupingConfiguration": {
+                        "enabled": false,
+                        "reopenClosedIncident": false,
+                        "lookbackDuration": "PT5H",
+                        "matchingMethod": "AllEntities",
+                        "groupByEntities": [],
+                        "groupByAlertDetails": [],
+                        "groupByCustomDetails": []
+                    }
+                },
+                "eventGroupingSettings": {
+                    "aggregationKind": "SingleAlert"
+                },
+                "alertDetailsOverride": null,
+                "customDetails": null,
+                "entityMappings": [
+                    {
+                        "entityType": "Host",
+                        "fieldMappings": [
+                            {
+                                "identifier": "HostName",
+                                "columnName": "Computer"
+                            },
+                            {
+                                "identifier": "FullName",
+                                "columnName": "LastHeartbeat"
+                            }
+                        ]
+                    }
+                ],
+                "sentinelEntitiesMappings": null
+            }
+        }
+    ]
+}

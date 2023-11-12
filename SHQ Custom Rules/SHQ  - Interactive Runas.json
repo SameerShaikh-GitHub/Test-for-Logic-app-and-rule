@@ -1,0 +1,78 @@
+{
+    "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentTemplate.json#",
+    "contentVersion": "1.0.0.0",
+    "parameters": {
+        "workspace": {
+            "type": "String"
+        }
+    },
+    "resources": [
+        {
+            "id": "[concat(resourceId('Microsoft.OperationalInsights/workspaces/providers', parameters('workspace'), 'Microsoft.SecurityInsights'),'/alertRules/40420959-588c-42aa-9f0a-23bd5089e8d6')]",
+            "name": "[concat(parameters('workspace'),'/Microsoft.SecurityInsights/40420959-588c-42aa-9f0a-23bd5089e8d6')]",
+            "type": "Microsoft.OperationalInsights/workspaces/providers/alertRules",
+            "kind": "Scheduled",
+            "apiVersion": "2022-11-01-preview",
+            "properties": {
+                "displayName": "SHQ - Interactive Runas",
+                "description": "Someone interactively running an application as another user.",
+                "severity": "Medium",
+                "enabled": false,
+                "query": "DeviceLogonEvents\r\n| where LogonType contains \"2\" or LogonType contains \"10\" and InitiatingProcessFileName contains \"runas.exe\"\r\n| project DeviceId, DeviceName, LogonType, AccountName, InitiatingProcessAccountUpn",
+                "queryFrequency": "PT5M",
+                "queryPeriod": "PT5M",
+                "triggerOperator": "GreaterThan",
+                "triggerThreshold": 0,
+                "suppressionDuration": "PT5H",
+                "suppressionEnabled": false,
+                "startTimeUtc": null,
+                "tactics": [
+                    "InitialAccess"
+                ],
+                "techniques": [
+                    "T1078"
+                ],
+                "alertRuleTemplateName": null,
+                "incidentConfiguration": {
+                    "createIncident": true,
+                    "groupingConfiguration": {
+                        "enabled": false,
+                        "reopenClosedIncident": false,
+                        "lookbackDuration": "PT5H",
+                        "matchingMethod": "AllEntities",
+                        "groupByEntities": [],
+                        "groupByAlertDetails": [],
+                        "groupByCustomDetails": []
+                    }
+                },
+                "eventGroupingSettings": {
+                    "aggregationKind": "SingleAlert"
+                },
+                "alertDetailsOverride": null,
+                "customDetails": null,
+                "entityMappings": [
+                    {
+                        "entityType": "Account",
+                        "fieldMappings": [
+                            {
+                                "identifier": "Name",
+                                "columnName": "InitiatingProcessAccountUpn"
+                            }
+                        ]
+                    },
+                    {
+                        "entityType": "Host",
+                        "fieldMappings": [
+                            {
+                                "identifier": "FullName",
+                                "columnName": "DeviceId"
+                            }
+                        ]
+                    }
+                ],
+                "sentinelEntitiesMappings": null,
+                "templateVersion": null
+            }
+        }
+    ]
+}

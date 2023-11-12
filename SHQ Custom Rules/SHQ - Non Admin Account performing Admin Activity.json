@@ -1,0 +1,74 @@
+{
+    "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentTemplate.json#",
+    "contentVersion": "1.0.0.0",
+    "parameters": {
+        "workspace": {
+            "type": "String"
+        }
+    },
+    "resources": [
+        {
+            "id": "[concat(resourceId('Microsoft.OperationalInsights/workspaces/providers', parameters('workspace'), 'Microsoft.SecurityInsights'),'/alertRules/f98e90bc-6718-44b6-8bad-8aeb9397fa3b')]",
+            "name": "[concat(parameters('workspace'),'/Microsoft.SecurityInsights/f98e90bc-6718-44b6-8bad-8aeb9397fa3b')]",
+            "type": "Microsoft.OperationalInsights/workspaces/providers/alertRules",
+            "kind": "Scheduled",
+            "apiVersion": "2022-09-01-preview",
+            "properties": {
+                "displayName": "SHQ - Non Admin Account performing Admin Activity",
+                "description": "SHQ - Non Admin Account performing Admin Activity",
+                "severity": "Medium",
+                "enabled": false,
+                "query": "   SecurityEvent\n    | where EventID == 4727\n        or EventID == 4728\n        or EventID == 4729\n        or EventID == 4730\n        or EventID == 4731\n        or EventID == 4731\n        or EventID == 4732\n        or EventID == 4733\n        or EventID == 4734\n        or EventID == 4735\n        or EventID == 4737\n        or EventID == 4754\n        or EventID == 4755\n        or EventID == 4756\n        or EventID == 4757\n        or EventID == 4758\n        or EventID == 4764\n        or EventID == 4799\n        or EventID == 1102\n        or EventID == 4610\n        or EventID == 4611\n        or EventID == 4614\n        or EventID == 4622\n        or EventID == 4648\n        or EventID == 4697\n        or EventID == 4698\n        or EventID == 4713\n        or EventID == 4719\n        or EventID == 4720\n        or EventID == 4724\n        or EventID == 4732\n        or EventID == 4739\n        or EventID == 4765\n        or EventID == 4765\n        or EventID == 4766\n        or EventID == 4780\n        or EventID == 4794\n        or EventID == 5141\n| where SubjectUserName !contains \"admin\"\n| where SubjectUserName <> \"SVC\"\n| where SubjectUserName <> \"SVC-\"\n| where SubjectUserName !contains \"$\"\n| where SubjectUserName <> \"SVC_\"",
+                "queryFrequency": "PT5M",
+                "queryPeriod": "PT5M",
+                "triggerOperator": "GreaterThan",
+                "triggerThreshold": 0,
+                "suppressionDuration": "PT5H",
+                "suppressionEnabled": false,
+                "tactics": [],
+                "techniques": [],
+                "alertRuleTemplateName": null,
+                "incidentConfiguration": {
+                    "createIncident": true,
+                    "groupingConfiguration": {
+                        "enabled": false,
+                        "reopenClosedIncident": false,
+                        "lookbackDuration": "PT5H",
+                        "matchingMethod": "AllEntities",
+                        "groupByEntities": [],
+                        "groupByAlertDetails": [],
+                        "groupByCustomDetails": []
+                    }
+                },
+                "eventGroupingSettings": {
+                    "aggregationKind": "AlertPerResult"
+                },
+                "alertDetailsOverride": {
+                    "alertDescriptionFormat": "EventID {{Activity}} \n{{EventData}}"
+                },
+                "customDetails": null,
+                "entityMappings": [
+                    {
+                        "entityType": "Account",
+                        "fieldMappings": [
+                            {
+                                "identifier": "FullName",
+                                "columnName": "SubjectUserName"
+                            }
+                        ]
+                    },
+                    {
+                        "entityType": "Account",
+                        "fieldMappings": [
+                            {
+                                "identifier": "FullName",
+                                "columnName": "TargetUserName"
+                            }
+                        ]
+                    }
+                ],
+                "sentinelEntitiesMappings": null
+            }
+        }
+    ]
+}

@@ -1,0 +1,87 @@
+{
+    "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentTemplate.json#",
+    "contentVersion": "1.0.0.0",
+    "parameters": {
+        "workspace": {
+            "type": "String"
+        }
+    },
+    "resources": [
+        {
+            "id": "[concat(resourceId('Microsoft.OperationalInsights/workspaces/providers', parameters('workspace'), 'Microsoft.SecurityInsights'),'/alertRules/80a0fa1b-a9d2-4b30-a24e-1e4ff5aab490')]",
+            "name": "[concat(parameters('workspace'),'/Microsoft.SecurityInsights/80a0fa1b-a9d2-4b30-a24e-1e4ff5aab490')]",
+            "type": "Microsoft.OperationalInsights/workspaces/providers/alertRules",
+            "kind": "Scheduled",
+            "apiVersion": "2022-11-01-preview",
+            "properties": {
+                "displayName": "SHQ - Administrator Group Enumeration",
+                "description": "This rules is created to identify any Query or changes done in default Admin Security groups",
+                "severity": "Medium",
+                "enabled": false,
+                "query": "// Query to detect Administrator Group Enumeration\r\nlet administratorGroupName = \"Administrators\"; // Change if necessary\r\nlet suspiciousActions = dynamic([\r\n    \"AddMemberToGroup\",\r\n    \"RemoveMemberFromGroup\",\r\n    \"AddMemberToGroupWithMembers\",\r\n    \"RemoveMemberFromGroupWithMembers\"\r\n    ]); // Adjust to include relevant actions\r\nDeviceEvents\r\n| where ActionType in (suspiciousActions)\r\n| where tostring(AdditionalFields) contains administratorGroupName\r\n| project ActionType, AccountName , DeviceId, DeviceName ,  AccountSid\r\n\r\n",
+                "queryFrequency": "PT5H",
+                "queryPeriod": "PT5H",
+                "triggerOperator": "GreaterThan",
+                "triggerThreshold": 0,
+                "suppressionDuration": "PT5H",
+                "suppressionEnabled": false,
+                "startTimeUtc": null,
+                "tactics": [
+                    "Discovery"
+                ],
+                "techniques": [
+                    "T1082"
+                ],
+                "alertRuleTemplateName": null,
+                "incidentConfiguration": {
+                    "createIncident": true,
+                    "groupingConfiguration": {
+                        "enabled": false,
+                        "reopenClosedIncident": false,
+                        "lookbackDuration": "PT5H",
+                        "matchingMethod": "AllEntities",
+                        "groupByEntities": [],
+                        "groupByAlertDetails": [],
+                        "groupByCustomDetails": []
+                    }
+                },
+                "eventGroupingSettings": {
+                    "aggregationKind": "SingleAlert"
+                },
+                "alertDetailsOverride": null,
+                "customDetails": null,
+                "entityMappings": [
+                    {
+                        "entityType": "Account",
+                        "fieldMappings": [
+                            {
+                                "identifier": "Name",
+                                "columnName": "AccountSid"
+                            }
+                        ]
+                    },
+                    {
+                        "entityType": "Host",
+                        "fieldMappings": [
+                            {
+                                "identifier": "FullName",
+                                "columnName": "DeviceId"
+                            }
+                        ]
+                    },
+                    {
+                        "entityType": "Process",
+                        "fieldMappings": [
+                            {
+                                "identifier": "ProcessId",
+                                "columnName": "ActionType"
+                            }
+                        ]
+                    }
+                ],
+                "sentinelEntitiesMappings": null,
+                "templateVersion": null
+            }
+        }
+    ]
+}

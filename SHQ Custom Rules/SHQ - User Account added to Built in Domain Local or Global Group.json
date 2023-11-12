@@ -1,0 +1,75 @@
+{
+    "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentTemplate.json#",
+    "contentVersion": "1.0.0.0",
+    "parameters": {
+        "workspace": {
+            "type": "String"
+        }
+    },
+    "resources": [
+        {
+            "id": "[concat(resourceId('Microsoft.OperationalInsights/workspaces/providers', parameters('workspace'), 'Microsoft.SecurityInsights'),'/alertRules/2a636b9c-4024-456f-8ecb-5574e789ef13')]",
+            "name": "[concat(parameters('workspace'),'/Microsoft.SecurityInsights/2a636b9c-4024-456f-8ecb-5574e789ef13')]",
+            "type": "Microsoft.OperationalInsights/workspaces/providers/alertRules",
+            "kind": "Scheduled",
+            "apiVersion": "2022-09-01-preview",
+            "properties": {
+                "displayName": "SHQ - User Account added to Built in Domain Local or Global Group",
+                "description": "",
+                "severity": "Medium",
+                "enabled": true,
+                "query": "// For AD SID mappings - https://docs.microsoft.com/windows/security/identity-protection/access-control/active-directory-security-groups\nlet WellKnownLocalSID = \"S-1-5-32-5[0-9][0-9]$\";\nlet WellKnownGroupSID = \"S-1-5-21-[0-9]*-[0-9]*-[0-9]*-5[0-9][0-9]$|S-1-5-21-[0-9]*-[0-9]*-[0-9]*-1102$|S-1-5-21-[0-9]*-[0-9]*-[0-9]*-1103$\";\nSecurityEvent \n| where AccountType == \"User\"\n// 4728 - A member was added to a security-enabled global group\n// 4732 - A member was added to a security-enabled local group\n// 4756 - A member was added to a security-enabled universal group\n| where EventID in (\"4728\", \"4732\", \"4756\")   \n| where TargetSid matches regex WellKnownLocalSID or TargetSid matches regex WellKnownGroupSID\n// Exclude Remote Desktop Users group: S-1-5-32-555\n| where TargetSid !in (\"S-1-5-32-555\")\n| project StartTimeUtc = TimeGenerated, EventID, Activity, Computer, TargetUserName, TargetDomainName, TargetSid, UserPrincipalName, SubjectUserName, SubjectUserSid \n| extend timestamp = StartTimeUtc, HostCustomEntity = Computer, AccountCustomEntity = UserPrincipalName",
+                "queryFrequency": "PT5M",
+                "queryPeriod": "PT5M",
+                "triggerOperator": "GreaterThan",
+                "triggerThreshold": 0,
+                "suppressionDuration": "PT5H",
+                "suppressionEnabled": false,
+                "tactics": [
+                    "Persistence",
+                    "PrivilegeEscalation"
+                ],
+                "techniques": [],
+                "alertRuleTemplateName": null,
+                "incidentConfiguration": {
+                    "createIncident": true,
+                    "groupingConfiguration": {
+                        "enabled": false,
+                        "reopenClosedIncident": false,
+                        "lookbackDuration": "PT5H",
+                        "matchingMethod": "AllEntities",
+                        "groupByEntities": [],
+                        "groupByAlertDetails": [],
+                        "groupByCustomDetails": []
+                    }
+                },
+                "eventGroupingSettings": {
+                    "aggregationKind": "AlertPerResult"
+                },
+                "alertDetailsOverride": null,
+                "customDetails": null,
+                "entityMappings": [
+                    {
+                        "entityType": "Account",
+                        "fieldMappings": [
+                            {
+                                "identifier": "FullName",
+                                "columnName": "AccountCustomEntity"
+                            }
+                        ]
+                    },
+                    {
+                        "entityType": "Host",
+                        "fieldMappings": [
+                            {
+                                "identifier": "FullName",
+                                "columnName": "HostCustomEntity"
+                            }
+                        ]
+                    }
+                ],
+                "sentinelEntitiesMappings": null
+            }
+        }
+    ]
+}

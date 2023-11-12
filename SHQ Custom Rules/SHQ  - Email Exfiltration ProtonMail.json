@@ -1,0 +1,87 @@
+{
+    "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentTemplate.json#",
+    "contentVersion": "1.0.0.0",
+    "parameters": {
+        "workspace": {
+            "type": "String"
+        }
+    },
+    "resources": [
+        {
+            "id": "[concat(resourceId('Microsoft.OperationalInsights/workspaces/providers', parameters('workspace'), 'Microsoft.SecurityInsights'),'/alertRules/b0d6af18-5950-4a18-9c33-1bc4683285eb')]",
+            "name": "[concat(parameters('workspace'),'/Microsoft.SecurityInsights/b0d6af18-5950-4a18-9c33-1bc4683285eb')]",
+            "type": "Microsoft.OperationalInsights/workspaces/providers/alertRules",
+            "kind": "Scheduled",
+            "apiVersion": "2022-11-01-preview",
+            "properties": {
+                "displayName": "SHQ - Email Exfiltration ProtonMail",
+                "description": "ProtonMail is an anonymous email service that has been seen used as exfiltration vectors in ransomware infections, such as Conti. Establish why ProtonMail is appearing on the cmdline.",
+                "severity": "Medium",
+                "enabled": false,
+                "query": "DeviceProcessEvents \r\n| where InitiatingProcessFileName =~ 'cmd.exe' or InitiatingProcessFileName =~ 'PowerShell.exe'\r\n| where InitiatingProcessCommandLine contains 'protonmail'\r\n| project DeviceId, DeviceName, FileName, ProcessCommandLine",
+                "queryFrequency": "PT5M",
+                "queryPeriod": "PT5M",
+                "triggerOperator": "GreaterThan",
+                "triggerThreshold": 0,
+                "suppressionDuration": "PT5H",
+                "suppressionEnabled": false,
+                "startTimeUtc": null,
+                "tactics": [
+                    "Exfiltration"
+                ],
+                "techniques": [
+                    "T1567"
+                ],
+                "alertRuleTemplateName": null,
+                "incidentConfiguration": {
+                    "createIncident": true,
+                    "groupingConfiguration": {
+                        "enabled": false,
+                        "reopenClosedIncident": false,
+                        "lookbackDuration": "PT5H",
+                        "matchingMethod": "AllEntities",
+                        "groupByEntities": [],
+                        "groupByAlertDetails": [],
+                        "groupByCustomDetails": []
+                    }
+                },
+                "eventGroupingSettings": {
+                    "aggregationKind": "SingleAlert"
+                },
+                "alertDetailsOverride": null,
+                "customDetails": null,
+                "entityMappings": [
+                    {
+                        "entityType": "Host",
+                        "fieldMappings": [
+                            {
+                                "identifier": "FullName",
+                                "columnName": "DeviceId"
+                            }
+                        ]
+                    },
+                    {
+                        "entityType": "File",
+                        "fieldMappings": [
+                            {
+                                "identifier": "Name",
+                                "columnName": "FileName"
+                            }
+                        ]
+                    },
+                    {
+                        "entityType": "Process",
+                        "fieldMappings": [
+                            {
+                                "identifier": "CommandLine",
+                                "columnName": "ProcessCommandLine"
+                            }
+                        ]
+                    }
+                ],
+                "sentinelEntitiesMappings": null,
+                "templateVersion": null
+            }
+        }
+    ]
+}

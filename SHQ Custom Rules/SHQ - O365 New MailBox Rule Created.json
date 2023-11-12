@@ -1,0 +1,68 @@
+{
+    "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentTemplate.json#",
+    "contentVersion": "1.0.0.0",
+    "parameters": {
+        "workspace": {
+            "type": "String"
+        }
+    },
+    "resources": [
+        {
+            "id": "[concat(resourceId('Microsoft.OperationalInsights/workspaces/providers', parameters('workspace'), 'Microsoft.SecurityInsights'),'/alertRules/6f1c63f4-9bac-4a23-a0a4-85f7a93dad35')]",
+            "name": "[concat(parameters('workspace'),'/Microsoft.SecurityInsights/6f1c63f4-9bac-4a23-a0a4-85f7a93dad35')]",
+            "type": "Microsoft.OperationalInsights/workspaces/providers/alertRules",
+            "kind": "Scheduled",
+            "apiVersion": "2022-09-01-preview",
+            "properties": {
+                "displayName": "SHQ - O365: New MailBox Rule Created",
+                "description": "",
+                "severity": "Medium",
+                "enabled": false,
+                "query": "OfficeActivity\n| where Operation in (\"New-InboxRule\" , \"Set-InboxRule\")\n| where parse_json(Parameters)[3].Name == \"MoveToFolder\"\n| where ResultStatus == \"True\"",
+                "queryFrequency": "PT5M",
+                "queryPeriod": "PT5M",
+                "triggerOperator": "GreaterThan",
+                "triggerThreshold": 0,
+                "suppressionDuration": "PT5H",
+                "suppressionEnabled": false,
+                "tactics": [
+                    "Exfiltration"
+                ],
+                "techniques": [],
+                "alertRuleTemplateName": null,
+                "incidentConfiguration": {
+                    "createIncident": true,
+                    "groupingConfiguration": {
+                        "enabled": false,
+                        "reopenClosedIncident": false,
+                        "lookbackDuration": "PT5H",
+                        "matchingMethod": "AllEntities",
+                        "groupByEntities": [],
+                        "groupByAlertDetails": [],
+                        "groupByCustomDetails": []
+                    }
+                },
+                "eventGroupingSettings": {
+                    "aggregationKind": "SingleAlert"
+                },
+                "alertDetailsOverride": {
+                    "alertDisplayNameFormat": "New Inbox rule created for user {{UserId}}",
+                    "alertDescriptionFormat": "{{Parameters}}"
+                },
+                "customDetails": null,
+                "entityMappings": [
+                    {
+                        "entityType": "Account",
+                        "fieldMappings": [
+                            {
+                                "identifier": "FullName",
+                                "columnName": "UserId"
+                            }
+                        ]
+                    }
+                ],
+                "sentinelEntitiesMappings": null
+            }
+        }
+    ]
+}

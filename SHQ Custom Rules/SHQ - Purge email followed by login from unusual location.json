@@ -1,0 +1,81 @@
+{
+    "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentTemplate.json#",
+    "contentVersion": "1.0.0.0",
+    "parameters": {
+        "workspace": {
+            "type": "String"
+        }
+    },
+    "resources": [
+        {
+            "id": "[concat(resourceId('Microsoft.OperationalInsights/workspaces/providers', parameters('workspace'), 'Microsoft.SecurityInsights'),'/alertRules/141b0a35-156a-4ba2-88aa-3722c27759b6')]",
+            "name": "[concat(parameters('workspace'),'/Microsoft.SecurityInsights/141b0a35-156a-4ba2-88aa-3722c27759b6')]",
+            "type": "Microsoft.OperationalInsights/workspaces/providers/alertRules",
+            "kind": "Scheduled",
+            "apiVersion": "2022-09-01-preview",
+            "properties": {
+                "displayName": "SHQ - Purge email followed by login from unusual location",
+                "description": "Purge email followed by login from unusual location (Non Expected BSI Locations)",
+                "severity": "Medium",
+                "enabled": true,
+                "query": "let waittime = 1h;\nlet lookback = 1d;\nlet event1 = (\nOfficeActivity\n| where TimeGenerated > ago(waittime+lookback)\n| where Operation == \"MoveToDeletedItems\"\n|project event1_time = TimeGenerated, UserId = UserId, Folder = Folder, DestFolder = DestFolder, ClientIP = ClientIP, AffectedItems = AffectedItems\n);\nlet event2 = (\nSigninLogs\n| where TimeGenerated > ago(waittime)\n| where OperationName == \"Sign-in activity\"\n| where Status == \"Success\"\n| where Location !contains \"AU\" and Location !contains \"BR\" and Location !contains \"CA\" and Location !contains \"CN\" and Location !contains \"FR\" and Location !contains \"DE\" and Location !contains \"HK\" and Location !contains \"IN\" and Location !contains \"ID\" and Location !contains \"IT\" and Location !contains \"JP\" and Location !contains \"MY\" and Location !contains \"MX\" and Location !contains \"NL\" and Location !contains \"NZ\" and Location !contains \"PH\" and Location !contains \"PL\" and Location !contains \"QA\" and Location !contains \"RU\" and Location !contains \"SA\" and Location !contains \"SG\" and Location !contains \"ZA\" and Location !contains \"KR\" and Location !contains \"ES\" and Location !contains \"TW\" and Location !contains \"TH\" and Location !contains \"TR\" and Location !contains \"AE\" and Location !contains \"US\" and Location !contains \"VN\" and Location !contains \"GB\" and Location !contains \"IE\"\n| project event2_time = TimeGenerated, UserId = UserPrincipalName, Location = Location, DeviceDetail = DeviceDetail, UserAgent = UserAgent, AuthenticationDetails = AuthenticationDetails, AuthenticationProcessingDetails = AuthenticationProcessingDetails, LocationDetails = LocationDetails, IPAddress = IPAddress\n);\n event1\n| join kind=inner event2 on UserId\n| where event1_time - event2_time < lookback\n| where tolong(event2_time - event1_time ) >=0\n",
+                "queryFrequency": "PT5M",
+                "queryPeriod": "PT5M",
+                "triggerOperator": "GreaterThan",
+                "triggerThreshold": 0,
+                "suppressionDuration": "PT5H",
+                "suppressionEnabled": false,
+                "tactics": [],
+                "techniques": [],
+                "alertRuleTemplateName": null,
+                "incidentConfiguration": {
+                    "createIncident": true,
+                    "groupingConfiguration": {
+                        "enabled": false,
+                        "reopenClosedIncident": false,
+                        "lookbackDuration": "PT5H",
+                        "matchingMethod": "AllEntities",
+                        "groupByEntities": [],
+                        "groupByAlertDetails": [],
+                        "groupByCustomDetails": []
+                    }
+                },
+                "eventGroupingSettings": {
+                    "aggregationKind": "SingleAlert"
+                },
+                "alertDetailsOverride": null,
+                "customDetails": null,
+                "entityMappings": [
+                    {
+                        "entityType": "Account",
+                        "fieldMappings": [
+                            {
+                                "identifier": "Name",
+                                "columnName": "UserId"
+                            }
+                        ]
+                    },
+                    {
+                        "entityType": "IP",
+                        "fieldMappings": [
+                            {
+                                "identifier": "Address",
+                                "columnName": "ClientIP"
+                            }
+                        ]
+                    },
+                    {
+                        "entityType": "IP",
+                        "fieldMappings": [
+                            {
+                                "identifier": "Address",
+                                "columnName": "IPAddress"
+                            }
+                        ]
+                    }
+                ],
+                "sentinelEntitiesMappings": null
+            }
+        }
+    ]
+}

@@ -1,0 +1,77 @@
+{
+    "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentTemplate.json#",
+    "contentVersion": "1.0.0.0",
+    "parameters": {
+        "workspace": {
+            "type": "String"
+        }
+    },
+    "resources": [
+        {
+            "id": "[concat(resourceId('Microsoft.OperationalInsights/workspaces/providers', parameters('workspace'), 'Microsoft.SecurityInsights'),'/alertRules/23db1306-4e89-4e15-a033-b6fa0a6f1e01')]",
+            "name": "[concat(parameters('workspace'),'/Microsoft.SecurityInsights/23db1306-4e89-4e15-a033-b6fa0a6f1e01')]",
+            "type": "Microsoft.OperationalInsights/workspaces/providers/alertRules",
+            "kind": "Scheduled",
+            "apiVersion": "2022-09-01-preview",
+            "properties": {
+                "displayName": "SHQ - New mailbox delegates Assign ",
+                "description": "User who is not Admin or loggedin from not expected IP for Admin",
+                "severity": "Medium",
+                "enabled": true,
+                "query": "\r\nOfficeActivity \r\n| where Operation == \"Add-MailboxPermission\"\r\n| where Parameters contains \"FullAccess\"\r\n| where UserId !contains \"admin\"\r\n| where UserId <> \"NT AUTHORITY\\\\SYSTEM (Microsoft.Exchange.Servicehost)\"\r\n",
+                "queryFrequency": "PT5M",
+                "queryPeriod": "PT5M",
+                "triggerOperator": "GreaterThan",
+                "triggerThreshold": 0,
+                "suppressionDuration": "PT5H",
+                "suppressionEnabled": false,
+                "tactics": [
+                    "PrivilegeEscalation"
+                ],
+                "techniques": [],
+                "alertRuleTemplateName": null,
+                "incidentConfiguration": {
+                    "createIncident": true,
+                    "groupingConfiguration": {
+                        "enabled": false,
+                        "reopenClosedIncident": false,
+                        "lookbackDuration": "PT5H",
+                        "matchingMethod": "AllEntities",
+                        "groupByEntities": [],
+                        "groupByAlertDetails": [],
+                        "groupByCustomDetails": []
+                    }
+                },
+                "eventGroupingSettings": {
+                    "aggregationKind": "AlertPerResult"
+                },
+                "alertDetailsOverride": {
+                    "alertDisplayNameFormat": "User {{UserId}} granted full access to {{OfficeObjectId}} mailbox",
+                    "alertDescriptionFormat": "{{Parameters}}"
+                },
+                "customDetails": null,
+                "entityMappings": [
+                    {
+                        "entityType": "IP",
+                        "fieldMappings": [
+                            {
+                                "identifier": "Address",
+                                "columnName": "ClientIP"
+                            }
+                        ]
+                    },
+                    {
+                        "entityType": "Account",
+                        "fieldMappings": [
+                            {
+                                "identifier": "FullName",
+                                "columnName": "UserId"
+                            }
+                        ]
+                    }
+                ],
+                "sentinelEntitiesMappings": null
+            }
+        }
+    ]
+}

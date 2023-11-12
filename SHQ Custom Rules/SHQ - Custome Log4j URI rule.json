@@ -1,0 +1,57 @@
+{
+    "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentTemplate.json#",
+    "contentVersion": "1.0.0.0",
+    "parameters": {
+        "workspace": {
+            "type": "String"
+        }
+    },
+    "resources": [
+        {
+            "id": "[concat(resourceId('Microsoft.OperationalInsights/workspaces/providers', parameters('workspace'), 'Microsoft.SecurityInsights'),'/alertRules/0da79507-2c55-4cd3-b66d-aa9c32d659e1')]",
+            "name": "[concat(parameters('workspace'),'/Microsoft.SecurityInsights/0da79507-2c55-4cd3-b66d-aa9c32d659e1')]",
+            "type": "Microsoft.OperationalInsights/workspaces/providers/alertRules",
+            "kind": "Scheduled",
+            "apiVersion": "2022-09-01-preview",
+            "properties": {
+                "displayName": "SHQ - Custome Log4j URI rule",
+                "description": "",
+                "severity": "High",
+                "enabled": true,
+                "query": "AzureDiagnostics\n| where requestUri_s contains \"${jndi:\" or requestUri_s contains \"/base64/\" or requestQuery_s contains \"${jndi:\" or requestQuery_s contains \"/base64/\" or originalRequestUriWithArgs_s contains \"${jndi:\" or originalRequestUriWithArgs_s contains \"/base64/\" or originalHost_s contains \"${jndi:\" or originalHost_s contains \"/base64/\"\n",
+                "queryFrequency": "PT1H",
+                "queryPeriod": "PT1H",
+                "triggerOperator": "GreaterThan",
+                "triggerThreshold": 0,
+                "suppressionDuration": "PT5H",
+                "suppressionEnabled": false,
+                "tactics": [
+                    "Reconnaissance",
+                    "Execution",
+                    "InitialAccess"
+                ],
+                "techniques": [],
+                "alertRuleTemplateName": null,
+                "incidentConfiguration": {
+                    "createIncident": true,
+                    "groupingConfiguration": {
+                        "enabled": false,
+                        "reopenClosedIncident": false,
+                        "lookbackDuration": "PT5H",
+                        "matchingMethod": "AllEntities",
+                        "groupByEntities": [],
+                        "groupByAlertDetails": [],
+                        "groupByCustomDetails": []
+                    }
+                },
+                "eventGroupingSettings": {
+                    "aggregationKind": "SingleAlert"
+                },
+                "alertDetailsOverride": null,
+                "customDetails": null,
+                "entityMappings": null,
+                "sentinelEntitiesMappings": null
+            }
+        }
+    ]
+}

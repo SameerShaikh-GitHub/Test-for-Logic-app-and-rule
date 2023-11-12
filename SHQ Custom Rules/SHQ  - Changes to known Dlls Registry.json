@@ -1,0 +1,78 @@
+{
+    "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentTemplate.json#",
+    "contentVersion": "1.0.0.0",
+    "parameters": {
+        "workspace": {
+            "type": "String"
+        }
+    },
+    "resources": [
+        {
+            "id": "[concat(resourceId('Microsoft.OperationalInsights/workspaces/providers', parameters('workspace'), 'Microsoft.SecurityInsights'),'/alertRules/6cf2e43b-6557-4a36-a002-f61a8acccc25')]",
+            "name": "[concat(parameters('workspace'),'/Microsoft.SecurityInsights/6cf2e43b-6557-4a36-a002-f61a8acccc25')]",
+            "type": "Microsoft.OperationalInsights/workspaces/providers/alertRules",
+            "kind": "Scheduled",
+            "apiVersion": "2022-11-01-preview",
+            "properties": {
+                "displayName": "SHQ - Changes to known Dlls Registry",
+                "description": "Known DLLs is a Microsoft feature where, for certain common dlls, they always load a known good version at a specified path, instead of using an algorithm to find the nearest version. This registry points to the known good versions. Threat: If you have enabled suppression in Cb Response, it will not report modloads of dlls in this registry. An attacker could evade detection by storing dlls in this directory. False Positives: Some legitimate processes may modify this registry, including dismhost, rare windows update services, and Wanova Desktop Services. However, this activity is very rare and should be investigated. Score: 95. References https://zerofoxtrots.net/2018/06/18/fun-with-dlls-part-1-dll-search-order-hijacking/'",
+                "severity": "Medium",
+                "enabled": false,
+                "query": "DeviceEvents\r\n| where RegistryValueData contains \"knowndlls\" \r\n| where InitiatingProcessFileName !contains \"dismhost.exe\" or InitiatingProcessFileName !contains \"setuphost.exe\"\r\n| project DeviceId, DeviceName, ProcessCommandLine, InitiatingProcessCommandLine",
+                "queryFrequency": "PT5M",
+                "queryPeriod": "PT5M",
+                "triggerOperator": "GreaterThan",
+                "triggerThreshold": 0,
+                "suppressionDuration": "PT5H",
+                "suppressionEnabled": false,
+                "startTimeUtc": null,
+                "tactics": [
+                    "Execution"
+                ],
+                "techniques": [
+                    "T1559"
+                ],
+                "alertRuleTemplateName": null,
+                "incidentConfiguration": {
+                    "createIncident": true,
+                    "groupingConfiguration": {
+                        "enabled": false,
+                        "reopenClosedIncident": false,
+                        "lookbackDuration": "PT5H",
+                        "matchingMethod": "AllEntities",
+                        "groupByEntities": [],
+                        "groupByAlertDetails": [],
+                        "groupByCustomDetails": []
+                    }
+                },
+                "eventGroupingSettings": {
+                    "aggregationKind": "SingleAlert"
+                },
+                "alertDetailsOverride": null,
+                "customDetails": null,
+                "entityMappings": [
+                    {
+                        "entityType": "Host",
+                        "fieldMappings": [
+                            {
+                                "identifier": "FullName",
+                                "columnName": "DeviceId"
+                            }
+                        ]
+                    },
+                    {
+                        "entityType": "Process",
+                        "fieldMappings": [
+                            {
+                                "identifier": "CommandLine",
+                                "columnName": "ProcessCommandLine"
+                            }
+                        ]
+                    }
+                ],
+                "sentinelEntitiesMappings": null,
+                "templateVersion": null
+            }
+        }
+    ]
+}

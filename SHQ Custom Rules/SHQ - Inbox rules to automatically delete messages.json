@@ -1,0 +1,77 @@
+{
+    "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentTemplate.json#",
+    "contentVersion": "1.0.0.0",
+    "parameters": {
+        "workspace": {
+            "type": "String"
+        }
+    },
+    "resources": [
+        {
+            "id": "[concat(resourceId('Microsoft.OperationalInsights/workspaces/providers', parameters('workspace'), 'Microsoft.SecurityInsights'),'/alertRules/66d2e103-3cc1-458e-bcbb-81a532f8d4b2')]",
+            "name": "[concat(parameters('workspace'),'/Microsoft.SecurityInsights/66d2e103-3cc1-458e-bcbb-81a532f8d4b2')]",
+            "type": "Microsoft.OperationalInsights/workspaces/providers/alertRules",
+            "kind": "Scheduled",
+            "apiVersion": "2022-09-01-preview",
+            "properties": {
+                "displayName": "SHQ - Inbox rules to automatically delete messages",
+                "description": "we’ve detected threat actors creating new inbox rules to silently drop any emails that contained words like “virus,” “hacked,” “hack,” “spam” or “request” in the email subject or body. You can start by creating an alert for the creation of inbox rules to automatically delete messages with keywords, but we recommend alerting on any new inbox rule that’s designed to automatically delete messages.",
+                "severity": "Medium",
+                "enabled": true,
+                "query": "OfficeActivity\r\n | mv-expand todynamic(Parameters)\r\n| where Operation in (\"New-InboxRule\" , \"Set-InboxRule\")\r\n| where Parameters.Name == \"DeleteMessage\"",
+                "queryFrequency": "PT5M",
+                "queryPeriod": "PT5M",
+                "triggerOperator": "GreaterThan",
+                "triggerThreshold": 0,
+                "suppressionDuration": "PT5H",
+                "suppressionEnabled": false,
+                "tactics": [
+                    "DefenseEvasion"
+                ],
+                "techniques": [],
+                "alertRuleTemplateName": null,
+                "incidentConfiguration": {
+                    "createIncident": true,
+                    "groupingConfiguration": {
+                        "enabled": false,
+                        "reopenClosedIncident": false,
+                        "lookbackDuration": "PT5H",
+                        "matchingMethod": "AllEntities",
+                        "groupByEntities": [],
+                        "groupByAlertDetails": [],
+                        "groupByCustomDetails": []
+                    }
+                },
+                "eventGroupingSettings": {
+                    "aggregationKind": "SingleAlert"
+                },
+                "alertDetailsOverride": {
+                    "alertDisplayNameFormat": "Email Auto Detete detected for {{UserId}}",
+                    "alertDescriptionFormat": "{{Parameters}}"
+                },
+                "customDetails": null,
+                "entityMappings": [
+                    {
+                        "entityType": "Account",
+                        "fieldMappings": [
+                            {
+                                "identifier": "FullName",
+                                "columnName": "UserId"
+                            }
+                        ]
+                    },
+                    {
+                        "entityType": "IP",
+                        "fieldMappings": [
+                            {
+                                "identifier": "Address",
+                                "columnName": "ClientIP"
+                            }
+                        ]
+                    }
+                ],
+                "sentinelEntitiesMappings": null
+            }
+        }
+    ]
+}

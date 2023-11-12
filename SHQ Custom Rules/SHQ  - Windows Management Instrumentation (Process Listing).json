@@ -1,0 +1,87 @@
+{
+    "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentTemplate.json#",
+    "contentVersion": "1.0.0.0",
+    "parameters": {
+        "workspace": {
+            "type": "String"
+        }
+    },
+    "resources": [
+        {
+            "id": "[concat(resourceId('Microsoft.OperationalInsights/workspaces/providers', parameters('workspace'), 'Microsoft.SecurityInsights'),'/alertRules/738b65ef-5a0e-4e4d-b459-33377a3f1565')]",
+            "name": "[concat(parameters('workspace'),'/Microsoft.SecurityInsights/738b65ef-5a0e-4e4d-b459-33377a3f1565')]",
+            "type": "Microsoft.OperationalInsights/workspaces/providers/alertRules",
+            "kind": "Scheduled",
+            "apiVersion": "2022-11-01-preview",
+            "properties": {
+                "displayName": "SHQ - Windows Management Instrumentation (Process Listing)",
+                "description": "This rule has been ported from Fireeye's HXIOC format to SIGMA. It detects a modified implmentation of WMIEXEC by FireEye.. https://tdm.socprime.com/tdm/info/0VjSmjrlREfk/2BjqSXYBmo5uvpkjjKvn/",
+                "severity": "Medium",
+                "enabled": false,
+                "query": "let wmiexecProcesses = \r\n    DeviceProcessEvents\r\n    | where ActionType == \"Allow\"\r\n    | where tolower(FileName) == \"wmiexec.exe\" or tolower(FolderPath) contains \"wmiexec\" // Variations of WMIEXEC\r\n    | extend IsSuspicious = \r\n        iif(\r\n    ProcessCommandLine contains \"commandline_parameter_1\" or\r\n        ProcessCommandLine contains \"commandline_parameter_2\" or\r\n        ProcessCommandLine contains \"commandline_parameter_3\",\r\n    true,\r\n    false\r\n);\r\nlet suspiciousWMIEXEC = wmiexecProcesses\r\n    | where IsSuspicious;\r\nsuspiciousWMIEXEC\r\n| project \r\n    DeviceId, DeviceName,\r\n    FileName,\r\n    FolderPath,\r\n    ProcessCommandLine",
+                "queryFrequency": "PT5M",
+                "queryPeriod": "PT5M",
+                "triggerOperator": "GreaterThan",
+                "triggerThreshold": 0,
+                "suppressionDuration": "PT5H",
+                "suppressionEnabled": false,
+                "startTimeUtc": null,
+                "tactics": [
+                    "Execution"
+                ],
+                "techniques": [
+                    "T1047"
+                ],
+                "alertRuleTemplateName": null,
+                "incidentConfiguration": {
+                    "createIncident": true,
+                    "groupingConfiguration": {
+                        "enabled": false,
+                        "reopenClosedIncident": false,
+                        "lookbackDuration": "PT5H",
+                        "matchingMethod": "AllEntities",
+                        "groupByEntities": [],
+                        "groupByAlertDetails": [],
+                        "groupByCustomDetails": []
+                    }
+                },
+                "eventGroupingSettings": {
+                    "aggregationKind": "SingleAlert"
+                },
+                "alertDetailsOverride": null,
+                "customDetails": null,
+                "entityMappings": [
+                    {
+                        "entityType": "Host",
+                        "fieldMappings": [
+                            {
+                                "identifier": "FullName",
+                                "columnName": "DeviceId"
+                            }
+                        ]
+                    },
+                    {
+                        "entityType": "File",
+                        "fieldMappings": [
+                            {
+                                "identifier": "Name",
+                                "columnName": "FileName"
+                            }
+                        ]
+                    },
+                    {
+                        "entityType": "Process",
+                        "fieldMappings": [
+                            {
+                                "identifier": "CommandLine",
+                                "columnName": "ProcessCommandLine"
+                            }
+                        ]
+                    }
+                ],
+                "sentinelEntitiesMappings": null,
+                "templateVersion": null
+            }
+        }
+    ]
+}

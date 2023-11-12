@@ -1,0 +1,86 @@
+{
+    "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentTemplate.json#",
+    "contentVersion": "1.0.0.0",
+    "parameters": {
+        "workspace": {
+            "type": "String"
+        }
+    },
+    "resources": [
+        {
+            "id": "[concat(resourceId('Microsoft.OperationalInsights/workspaces/providers', parameters('workspace'), 'Microsoft.SecurityInsights'),'/alertRules/7a4246c1-373c-4e4f-9d1b-a11b01c8bc60')]",
+            "name": "[concat(parameters('workspace'),'/Microsoft.SecurityInsights/7a4246c1-373c-4e4f-9d1b-a11b01c8bc60')]",
+            "type": "Microsoft.OperationalInsights/workspaces/providers/alertRules",
+            "kind": "Scheduled",
+            "apiVersion": "2022-09-01-preview",
+            "properties": {
+                "displayName": "SHQ - New mailbox forwarding to an external address",
+                "description": "This technique doesn’t involve inbox rules. Instead, it watches for wiley attackers who are configuring an external email address in the victim’s account settings menu. While the setup is a bit different, the intent is the same: the attacker is trying to hide evidence from the victim that his or her mailbox is being used to perpetuate BEC fraud",
+                "severity": "Medium",
+                "enabled": true,
+                "query": "OfficeActivity\r\n| where Operation in (\"New-InboxRule\" , \"Set-InboxRule\" , \"Set-Mailbox\")\r\n| mv-expand todynamic(Parameters)\r\n| where Parameters.Name == \"DeliverToMailboxAndForward\"\r\n| where Parameters.Value !contains \"@Customerdomain.com\"",
+                "queryFrequency": "PT7M",
+                "queryPeriod": "PT7M",
+                "triggerOperator": "GreaterThan",
+                "triggerThreshold": 0,
+                "suppressionDuration": "PT5H",
+                "suppressionEnabled": false,
+                "tactics": [
+                    "Exfiltration"
+                ],
+                "techniques": [],
+                "alertRuleTemplateName": null,
+                "incidentConfiguration": {
+                    "createIncident": true,
+                    "groupingConfiguration": {
+                        "enabled": false,
+                        "reopenClosedIncident": false,
+                        "lookbackDuration": "PT5H",
+                        "matchingMethod": "AllEntities",
+                        "groupByEntities": [],
+                        "groupByAlertDetails": [],
+                        "groupByCustomDetails": []
+                    }
+                },
+                "eventGroupingSettings": {
+                    "aggregationKind": "SingleAlert"
+                },
+                "alertDetailsOverride": {
+                    "alertDisplayNameFormat": "New mailbox forwarding to an external address from user {{OfficeObjectId}}",
+                    "alertDescriptionFormat": "{{Parameters}}"
+                },
+                "customDetails": null,
+                "entityMappings": [
+                    {
+                        "entityType": "Account",
+                        "fieldMappings": [
+                            {
+                                "identifier": "FullName",
+                                "columnName": "UserId"
+                            }
+                        ]
+                    },
+                    {
+                        "entityType": "Account",
+                        "fieldMappings": [
+                            {
+                                "identifier": "Name",
+                                "columnName": "OfficeObjectId"
+                            }
+                        ]
+                    },
+                    {
+                        "entityType": "IP",
+                        "fieldMappings": [
+                            {
+                                "identifier": "Address",
+                                "columnName": "ClientIP"
+                            }
+                        ]
+                    }
+                ],
+                "sentinelEntitiesMappings": null
+            }
+        }
+    ]
+}

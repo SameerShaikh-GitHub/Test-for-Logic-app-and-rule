@@ -1,0 +1,87 @@
+{
+    "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentTemplate.json#",
+    "contentVersion": "1.0.0.0",
+    "parameters": {
+        "workspace": {
+            "type": "String"
+        }
+    },
+    "resources": [
+        {
+            "id": "[concat(resourceId('Microsoft.OperationalInsights/workspaces/providers', parameters('workspace'), 'Microsoft.SecurityInsights'),'/alertRules/c549dfc4-d56b-4039-b1f5-fb5802d8823c')]",
+            "name": "[concat(parameters('workspace'),'/Microsoft.SecurityInsights/c549dfc4-d56b-4039-b1f5-fb5802d8823c')]",
+            "type": "Microsoft.OperationalInsights/workspaces/providers/alertRules",
+            "kind": "Scheduled",
+            "apiVersion": "2022-11-01-preview",
+            "properties": {
+                "displayName": "SHQ - Suspicious account creation activity using net commands",
+                "description": "Adversaries with a sufficient level of access may create a local system, domain, or cloud tenant account. Such accounts may be used for persistence that do not require persistent remote access tools to be deployed on the system. The net user commands can be used to create a local or domain account.",
+                "severity": "Medium",
+                "enabled": false,
+                "query": "DeviceProcessEvents\r\n| where FileName in~ (\"net.exe\", \"net1.exe\") and Timestamp > ago(3d)\r\n| parse kind=regex flags=iU ProcessCommandLine with * \"user\" CreatedUser \" \"*\"/ad\"\r\n| where isnotempty(CreatedUser)  \r\n| where not (FileName =~ \"net1.exe\" and InitiatingProcessFileName =~ \"net.exe\" and replace(\"net\", \"net1\", InitiatingProcessCommandLine) =~ ProcessCommandLine)\r\n| extend CreatedOnLocalMachine=(ProcessCommandLine !contains \"/do\")\r\n| where ProcessCommandLine !contains \"/add\" or (CreatedOnLocalMachine == 0 and ProcessCommandLine !contains \"/domain\")\r\n| project AccountName, DeviceId, DeviceName, ProcessCommandLine",
+                "queryFrequency": "PT5M",
+                "queryPeriod": "PT5M",
+                "triggerOperator": "GreaterThan",
+                "triggerThreshold": 0,
+                "suppressionDuration": "PT5H",
+                "suppressionEnabled": false,
+                "startTimeUtc": null,
+                "tactics": [
+                    "PrivilegeEscalation"
+                ],
+                "techniques": [
+                    "T1078"
+                ],
+                "alertRuleTemplateName": null,
+                "incidentConfiguration": {
+                    "createIncident": true,
+                    "groupingConfiguration": {
+                        "enabled": false,
+                        "reopenClosedIncident": false,
+                        "lookbackDuration": "PT5H",
+                        "matchingMethod": "AllEntities",
+                        "groupByEntities": [],
+                        "groupByAlertDetails": [],
+                        "groupByCustomDetails": []
+                    }
+                },
+                "eventGroupingSettings": {
+                    "aggregationKind": "SingleAlert"
+                },
+                "alertDetailsOverride": null,
+                "customDetails": null,
+                "entityMappings": [
+                    {
+                        "entityType": "Account",
+                        "fieldMappings": [
+                            {
+                                "identifier": "Name",
+                                "columnName": "AccountName"
+                            }
+                        ]
+                    },
+                    {
+                        "entityType": "Host",
+                        "fieldMappings": [
+                            {
+                                "identifier": "FullName",
+                                "columnName": "DeviceId"
+                            }
+                        ]
+                    },
+                    {
+                        "entityType": "Process",
+                        "fieldMappings": [
+                            {
+                                "identifier": "CommandLine",
+                                "columnName": "ProcessCommandLine"
+                            }
+                        ]
+                    }
+                ],
+                "sentinelEntitiesMappings": null,
+                "templateVersion": null
+            }
+        }
+    ]
+}

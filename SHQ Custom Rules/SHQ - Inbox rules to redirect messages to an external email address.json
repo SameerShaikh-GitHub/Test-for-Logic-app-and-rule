@@ -1,0 +1,77 @@
+{
+    "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentTemplate.json#",
+    "contentVersion": "1.0.0.0",
+    "parameters": {
+        "workspace": {
+            "type": "String"
+        }
+    },
+    "resources": [
+        {
+            "id": "[concat(resourceId('Microsoft.OperationalInsights/workspaces/providers', parameters('workspace'), 'Microsoft.SecurityInsights'),'/alertRules/1feccdd3-181a-4d95-b255-4797320430d7')]",
+            "name": "[concat(parameters('workspace'),'/Microsoft.SecurityInsights/1feccdd3-181a-4d95-b255-4797320430d7')]",
+            "type": "Microsoft.OperationalInsights/workspaces/providers/alertRules",
+            "kind": "Scheduled",
+            "apiVersion": "2022-09-01-preview",
+            "properties": {
+                "displayName": "SHQ - Inbox rules to redirect messages to an external email address",
+                "description": "Using this technique, the message isn’t delivered to the original recipients and no notification is sent to the sender or the original recipients. We’ve detected threat actors creating inbox rules to redirect emails that contained words like “statement,” “outstanding,” “past due,” “payment,” “invoice” or “wire” to email accounts outside of the organization’s domain (for example, a Gmail account).",
+                "severity": "High",
+                "enabled": true,
+                "query": "OfficeActivity\r\n| where Operation in (\"New-InboxRule\" , \"Set-InboxRule\")\r\n| where parse_json(Parameters)[5].Name == \"RedirectTo\"",
+                "queryFrequency": "PT5M",
+                "queryPeriod": "PT5M",
+                "triggerOperator": "GreaterThan",
+                "triggerThreshold": 0,
+                "suppressionDuration": "PT5H",
+                "suppressionEnabled": false,
+                "tactics": [
+                    "Exfiltration"
+                ],
+                "techniques": [],
+                "alertRuleTemplateName": null,
+                "incidentConfiguration": {
+                    "createIncident": true,
+                    "groupingConfiguration": {
+                        "enabled": false,
+                        "reopenClosedIncident": false,
+                        "lookbackDuration": "PT5H",
+                        "matchingMethod": "AllEntities",
+                        "groupByEntities": [],
+                        "groupByAlertDetails": [],
+                        "groupByCustomDetails": []
+                    }
+                },
+                "eventGroupingSettings": {
+                    "aggregationKind": "SingleAlert"
+                },
+                "alertDetailsOverride": {
+                    "alertDisplayNameFormat": "Email Redirect detected for {{UserId}}",
+                    "alertDescriptionFormat": "{{Parameters}}"
+                },
+                "customDetails": null,
+                "entityMappings": [
+                    {
+                        "entityType": "IP",
+                        "fieldMappings": [
+                            {
+                                "identifier": "Address",
+                                "columnName": "ClientIP"
+                            }
+                        ]
+                    },
+                    {
+                        "entityType": "Account",
+                        "fieldMappings": [
+                            {
+                                "identifier": "FullName",
+                                "columnName": "UserId"
+                            }
+                        ]
+                    }
+                ],
+                "sentinelEntitiesMappings": null
+            }
+        }
+    ]
+}

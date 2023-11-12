@@ -1,0 +1,75 @@
+{
+    "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentTemplate.json#",
+    "contentVersion": "1.0.0.0",
+    "parameters": {
+        "workspace": {
+            "type": "String"
+        }
+    },
+    "resources": [
+        {
+            "id": "[concat(resourceId('Microsoft.OperationalInsights/workspaces/providers', parameters('workspace'), 'Microsoft.SecurityInsights'),'/alertRules/6cab9a72-4643-4d36-8c3b-19559931df18')]",
+            "name": "[concat(parameters('workspace'),'/Microsoft.SecurityInsights/6cab9a72-4643-4d36-8c3b-19559931df18')]",
+            "type": "Microsoft.OperationalInsights/workspaces/providers/alertRules",
+            "kind": "Scheduled",
+            "apiVersion": "2022-09-01-preview",
+            "properties": {
+                "displayName": "SHQ - Possible VM Exposed over Internet",
+                "description": "This rule will trigger when an VM being accessed from external IP, which is not recommended. It can be a sign of exposing VM externally and need immediate attention",
+                "severity": "High",
+                "enabled": true,
+                "query": "VMConnection\r\n| where Direction == \"inbound\"\r\n| where SourceIp != RemoteIp",
+                "queryFrequency": "PT5H",
+                "queryPeriod": "PT5H",
+                "triggerOperator": "GreaterThan",
+                "triggerThreshold": 0,
+                "suppressionDuration": "PT5H",
+                "suppressionEnabled": false,
+                "tactics": [
+                    "ResourceDevelopment"
+                ],
+                "techniques": [
+                    "T1586"
+                ],
+                "alertRuleTemplateName": null,
+                "incidentConfiguration": {
+                    "createIncident": true,
+                    "groupingConfiguration": {
+                        "enabled": false,
+                        "reopenClosedIncident": false,
+                        "lookbackDuration": "PT5H",
+                        "matchingMethod": "AllEntities",
+                        "groupByEntities": [],
+                        "groupByAlertDetails": [],
+                        "groupByCustomDetails": []
+                    }
+                },
+                "eventGroupingSettings": {
+                    "aggregationKind": "SingleAlert"
+                },
+                "alertDetailsOverride": null,
+                "customDetails": null,
+                "entityMappings": [
+                    {
+                        "entityType": "Account",
+                        "fieldMappings": [
+                            {
+                                "identifier": "FullName",
+                                "columnName": "Machine"
+                            },
+                            {
+                                "identifier": "Name",
+                                "columnName": "Computer"
+                            },
+                            {
+                                "identifier": "DisplayName",
+                                "columnName": "RemoteIp"
+                            }
+                        ]
+                    }
+                ],
+                "sentinelEntitiesMappings": null
+            }
+        }
+    ]
+}

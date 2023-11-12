@@ -1,0 +1,67 @@
+{
+    "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentTemplate.json#",
+    "contentVersion": "1.0.0.0",
+    "parameters": {
+        "workspace": {
+            "type": "String"
+        }
+    },
+    "resources": [
+        {
+            "id": "[concat(resourceId('Microsoft.OperationalInsights/workspaces/providers', parameters('workspace'), 'Microsoft.SecurityInsights'),'/alertRules/04dd12b2-b1d5-4a23-9ac2-c2779fd80b67')]",
+            "name": "[concat(parameters('workspace'),'/Microsoft.SecurityInsights/04dd12b2-b1d5-4a23-9ac2-c2779fd80b67')]",
+            "type": "Microsoft.OperationalInsights/workspaces/providers/alertRules",
+            "kind": "Scheduled",
+            "apiVersion": "2022-09-01-preview",
+            "properties": {
+                "displayName": "SHQ - Multiple Suspicious Event for same Compromised Entity",
+                "description": "",
+                "severity": "Medium",
+                "enabled": true,
+                "query": "let timeframe = ago(10m);\r\nlet threshold = 4;\r\nSecurityAlert\r\n| where ProductComponentName <> \"Scheduled Alerts\"\r\n| where isnotempty(CompromisedEntity)\r\n| summarize StartTime = min(TimeGenerated), EndTime = max(TimeGenerated) , AlertNameCount = dcount(AlertName) by CompromisedEntity\r\n| where AlertNameCount >= threshold",
+                "queryFrequency": "PT15M",
+                "queryPeriod": "PT15M",
+                "triggerOperator": "GreaterThan",
+                "triggerThreshold": 0,
+                "suppressionDuration": "PT5H",
+                "suppressionEnabled": false,
+                "tactics": [
+                    "Persistence"
+                ],
+                "techniques": [],
+                "alertRuleTemplateName": null,
+                "incidentConfiguration": {
+                    "createIncident": true,
+                    "groupingConfiguration": {
+                        "enabled": false,
+                        "reopenClosedIncident": false,
+                        "lookbackDuration": "PT5H",
+                        "matchingMethod": "AllEntities",
+                        "groupByEntities": [],
+                        "groupByAlertDetails": [],
+                        "groupByCustomDetails": []
+                    }
+                },
+                "eventGroupingSettings": {
+                    "aggregationKind": "AlertPerResult"
+                },
+                "alertDetailsOverride": {
+                    "alertDescriptionFormat": "Compromised Entity {{CompromisedEntity}}\nCount of Unique Alert Name {{AlertNameCount}}"
+                },
+                "customDetails": null,
+                "entityMappings": [
+                    {
+                        "entityType": "Account",
+                        "fieldMappings": [
+                            {
+                                "identifier": "Name",
+                                "columnName": "CompromisedEntity"
+                            }
+                        ]
+                    }
+                ],
+                "sentinelEntitiesMappings": null
+            }
+        }
+    ]
+}

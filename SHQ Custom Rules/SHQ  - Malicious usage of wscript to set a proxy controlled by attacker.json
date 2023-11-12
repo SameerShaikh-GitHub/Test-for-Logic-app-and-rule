@@ -1,0 +1,78 @@
+{
+    "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentTemplate.json#",
+    "contentVersion": "1.0.0.0",
+    "parameters": {
+        "workspace": {
+            "type": "String"
+        }
+    },
+    "resources": [
+        {
+            "id": "[concat(resourceId('Microsoft.OperationalInsights/workspaces/providers', parameters('workspace'), 'Microsoft.SecurityInsights'),'/alertRules/c2336920-5043-4fca-8eca-36ea185bbd82')]",
+            "name": "[concat(parameters('workspace'),'/Microsoft.SecurityInsights/c2336920-5043-4fca-8eca-36ea185bbd82')]",
+            "type": "Microsoft.OperationalInsights/workspaces/providers/alertRules",
+            "kind": "Scheduled",
+            "apiVersion": "2022-11-01-preview",
+            "properties": {
+                "displayName": "SHQ - Malicious usage of wscript to set a proxy controlled by attacker",
+                "description": "This query looks for a wscript process modifying registry keys that can be used to set up a web traffic proxy. Threat: Malware may set up a proxy in order to steal credentials and control a user''s web traffic. False Positives: IT administrators may run a script that configures a corporate proxy.",
+                "severity": "Medium",
+                "enabled": false,
+                "query": "DeviceEvents\r\n| where InitiatingProcessFileName in~ (\"emuser.exe\" , \"wscript\") and RegistryValueData contains \"autoconfigurl\" or RegistryValueData contains \"wpadnetworkname\" or RegistryValueData contains \"proxyenable\"\r\n| project DeviceId, DeviceName, ProcessCommandLine",
+                "queryFrequency": "PT5M",
+                "queryPeriod": "PT5M",
+                "triggerOperator": "GreaterThan",
+                "triggerThreshold": 0,
+                "suppressionDuration": "PT5H",
+                "suppressionEnabled": false,
+                "startTimeUtc": null,
+                "tactics": [
+                    "Execution"
+                ],
+                "techniques": [
+                    "T1559"
+                ],
+                "alertRuleTemplateName": null,
+                "incidentConfiguration": {
+                    "createIncident": true,
+                    "groupingConfiguration": {
+                        "enabled": false,
+                        "reopenClosedIncident": false,
+                        "lookbackDuration": "PT5H",
+                        "matchingMethod": "AllEntities",
+                        "groupByEntities": [],
+                        "groupByAlertDetails": [],
+                        "groupByCustomDetails": []
+                    }
+                },
+                "eventGroupingSettings": {
+                    "aggregationKind": "SingleAlert"
+                },
+                "alertDetailsOverride": null,
+                "customDetails": null,
+                "entityMappings": [
+                    {
+                        "entityType": "Host",
+                        "fieldMappings": [
+                            {
+                                "identifier": "FullName",
+                                "columnName": "DeviceId"
+                            }
+                        ]
+                    },
+                    {
+                        "entityType": "Process",
+                        "fieldMappings": [
+                            {
+                                "identifier": "CommandLine",
+                                "columnName": "ProcessCommandLine"
+                            }
+                        ]
+                    }
+                ],
+                "sentinelEntitiesMappings": null,
+                "templateVersion": null
+            }
+        }
+    ]
+}

@@ -1,0 +1,74 @@
+{
+    "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentTemplate.json#",
+    "contentVersion": "1.0.0.0",
+    "parameters": {
+        "workspace": {
+            "type": "String"
+        }
+    },
+    "resources": [
+        {
+            "id": "[concat(resourceId('Microsoft.OperationalInsights/workspaces/providers', parameters('workspace'), 'Microsoft.SecurityInsights'),'/alertRules/d28315e0-3b55-4bbc-9b1a-4ec7925c4a0d')]",
+            "name": "[concat(parameters('workspace'),'/Microsoft.SecurityInsights/d28315e0-3b55-4bbc-9b1a-4ec7925c4a0d')]",
+            "type": "Microsoft.OperationalInsights/workspaces/providers/alertRules",
+            "kind": "Scheduled",
+            "apiVersion": "2022-09-01-preview",
+            "properties": {
+                "displayName": "SHQ - Interactive Logon for the account",
+                "description": "This use case is been created to detected interactive logon for the account \"sepcific user account\". The mentioned user is expected to be logged on using user agent \"BAV2ROPC (Basic Authenticaiton)\". This incident must be escalated and informed. ",
+                "severity": "High",
+                "enabled": true,
+                "query": "union SigninLogs, AADNonInteractiveUserSignInLogs\n| where UserPrincipalName in (\"user.id@customerDomain.com\", \"user.id@customerDomain.com\")\n| where UserAgent <> \"BAV2ROPC\"",
+                "queryFrequency": "PT12H",
+                "queryPeriod": "PT12H",
+                "triggerOperator": "GreaterThan",
+                "triggerThreshold": 0,
+                "suppressionDuration": "PT5H",
+                "suppressionEnabled": false,
+                "tactics": [
+                    "InitialAccess"
+                ],
+                "techniques": [],
+                "alertRuleTemplateName": null,
+                "incidentConfiguration": {
+                    "createIncident": true,
+                    "groupingConfiguration": {
+                        "enabled": false,
+                        "reopenClosedIncident": false,
+                        "lookbackDuration": "PT5H",
+                        "matchingMethod": "AllEntities",
+                        "groupByEntities": [],
+                        "groupByAlertDetails": [],
+                        "groupByCustomDetails": []
+                    }
+                },
+                "eventGroupingSettings": {
+                    "aggregationKind": "SingleAlert"
+                },
+                "alertDetailsOverride": null,
+                "customDetails": null,
+                "entityMappings": [
+                    {
+                        "entityType": "Account",
+                        "fieldMappings": [
+                            {
+                                "identifier": "FullName",
+                                "columnName": "UserPrincipalName"
+                            }
+                        ]
+                    },
+                    {
+                        "entityType": "IP",
+                        "fieldMappings": [
+                            {
+                                "identifier": "Address",
+                                "columnName": "IPAddress"
+                            }
+                        ]
+                    }
+                ],
+                "sentinelEntitiesMappings": null
+            }
+        }
+    ]
+}

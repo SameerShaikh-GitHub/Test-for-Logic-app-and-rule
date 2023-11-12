@@ -1,0 +1,87 @@
+{
+    "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentTemplate.json#",
+    "contentVersion": "1.0.0.0",
+    "parameters": {
+        "workspace": {
+            "type": "String"
+        }
+    },
+    "resources": [
+        {
+            "id": "[concat(resourceId('Microsoft.OperationalInsights/workspaces/providers', parameters('workspace'), 'Microsoft.SecurityInsights'),'/alertRules/cfb2162d-b219-4387-825e-6fc3a96a5ac1')]",
+            "name": "[concat(parameters('workspace'),'/Microsoft.SecurityInsights/cfb2162d-b219-4387-825e-6fc3a96a5ac1')]",
+            "type": "Microsoft.OperationalInsights/workspaces/providers/alertRules",
+            "kind": "Scheduled",
+            "apiVersion": "2022-11-01-preview",
+            "properties": {
+                "displayName": "SHQ - Potential Kerberoasting attempt",
+                "description": "Service principal names (SPNs) are used to uniquely identify each instance of a Windows service. To enable authentication, Kerberos requires that SPNs be associated with at least one service logon account (an account specifically tasked with running a service).",
+                "severity": "Medium",
+                "enabled": false,
+                "query": "// Filter for Kerberos service ticket requests\nSecurityEvent\n| where EventID == 4769 // Event ID for Kerberos service ticket request\n| where TargetUserName != \"$\" // Exclude service tickets for computer accounts\n// Optionally, filter for specific SPNs or services if necessary\n| where tostring(AdditionalInfo) contains \"service/SPN\"\n// Look for events where the Encryption Type indicates pre-authentication failure\n| where tostring(AdditionalInfo) contains \"0x18\" or tostring(AdditionalInfo) contains \"0x17\"\n// You can further refine the query by adding time-based filters or other conditions\n// | where TimeGenerated > datetime(2023-01-01) and TimeGenerated < datetime(2023-12-31)\n| project TimeGenerated, Computer, TargetUserName, ServiceName, AdditionalInfo\n\n",
+                "queryFrequency": "PT5M",
+                "queryPeriod": "PT5M",
+                "triggerOperator": "GreaterThan",
+                "triggerThreshold": 0,
+                "suppressionDuration": "PT5H",
+                "suppressionEnabled": false,
+                "startTimeUtc": null,
+                "tactics": [
+                    "CredentialAccess"
+                ],
+                "techniques": [
+                    "T1558"
+                ],
+                "alertRuleTemplateName": null,
+                "incidentConfiguration": {
+                    "createIncident": true,
+                    "groupingConfiguration": {
+                        "enabled": false,
+                        "reopenClosedIncident": false,
+                        "lookbackDuration": "PT5H",
+                        "matchingMethod": "AllEntities",
+                        "groupByEntities": [],
+                        "groupByAlertDetails": [],
+                        "groupByCustomDetails": []
+                    }
+                },
+                "eventGroupingSettings": {
+                    "aggregationKind": "SingleAlert"
+                },
+                "alertDetailsOverride": null,
+                "customDetails": null,
+                "entityMappings": [
+                    {
+                        "entityType": "Host",
+                        "fieldMappings": [
+                            {
+                                "identifier": "FullName",
+                                "columnName": "Computer"
+                            }
+                        ]
+                    },
+                    {
+                        "entityType": "Account",
+                        "fieldMappings": [
+                            {
+                                "identifier": "FullName",
+                                "columnName": "TargetUserName"
+                            }
+                        ]
+                    },
+                    {
+                        "entityType": "Process",
+                        "fieldMappings": [
+                            {
+                                "identifier": "ProcessId",
+                                "columnName": "ServiceName"
+                            }
+                        ]
+                    }
+                ],
+                "sentinelEntitiesMappings": null,
+                "templateVersion": null
+            }
+        }
+    ]
+}

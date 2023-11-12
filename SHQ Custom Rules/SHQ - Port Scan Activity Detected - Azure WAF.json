@@ -1,0 +1,65 @@
+{
+    "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentTemplate.json#",
+    "contentVersion": "1.0.0.0",
+    "parameters": {
+        "workspace": {
+            "type": "String"
+        }
+    },
+    "resources": [
+        {
+            "id": "[concat(resourceId('Microsoft.OperationalInsights/workspaces/providers', parameters('workspace'), 'Microsoft.SecurityInsights'),'/alertRules/119be121-584e-42ba-8b66-5e0dea051103')]",
+            "name": "[concat(parameters('workspace'),'/Microsoft.SecurityInsights/119be121-584e-42ba-8b66-5e0dea051103')]",
+            "type": "Microsoft.OperationalInsights/workspaces/providers/alertRules",
+            "kind": "Scheduled",
+            "apiVersion": "2022-09-01-preview",
+            "properties": {
+                "displayName": "SHQ - Port Scan Activity Detected",
+                "description": "",
+                "severity": "Medium",
+                "enabled": true,
+                "query": "let PortScanThreshold = 50;\nAzureDiagnostics\n| where OperationName in (\"AzureFirewallApplicationRuleLog\",\"AzureFirewallNetworkRuleLog\")\n| extend msg_s_replaced0 = replace(@\"\\s\\s\",@\" \",msg_s)\n| extend msg_s_replaced1 = replace(@\"\\.\\s\",@\" \",msg_s_replaced0)\n| extend msg_a = split(msg_s_replaced1,\" \")\n| extend srcAddr_a = split(msg_a[3],\":\") , destAddr_a = split(msg_a[5],\":\")\n| extend protocol = tostring(msg_a[0]), srcIp = tostring(srcAddr_a[0]), srcPort = tostring(srcAddr_a[1]), destIp = tostring(destAddr_a[0]), destPort = tostring(destAddr_a[1]), action = tostring(msg_a[7])\n| extend url = iff(destIp matches regex \"\\\\d+\\\\.\\\\d+\\\\.\\\\d+\\\\.\\\\d+\",\"\",destIp)\n| summarize AttemptedPortsCount=dcount(destPort) by srcIp, bin(TimeGenerated, 10m)\n| where AttemptedPortsCount > PortScanThreshold\n",
+                "queryFrequency": "PT1H",
+                "queryPeriod": "PT1H",
+                "triggerOperator": "GreaterThan",
+                "triggerThreshold": 0,
+                "suppressionDuration": "PT5H",
+                "suppressionEnabled": false,
+                "tactics": [
+                    "Reconnaissance"
+                ],
+                "techniques": [],
+                "alertRuleTemplateName": null,
+                "incidentConfiguration": {
+                    "createIncident": true,
+                    "groupingConfiguration": {
+                        "enabled": false,
+                        "reopenClosedIncident": false,
+                        "lookbackDuration": "PT5H",
+                        "matchingMethod": "AllEntities",
+                        "groupByEntities": [],
+                        "groupByAlertDetails": [],
+                        "groupByCustomDetails": []
+                    }
+                },
+                "eventGroupingSettings": {
+                    "aggregationKind": "AlertPerResult"
+                },
+                "alertDetailsOverride": null,
+                "customDetails": null,
+                "entityMappings": [
+                    {
+                        "entityType": "IP",
+                        "fieldMappings": [
+                            {
+                                "identifier": "Address",
+                                "columnName": "srcIp"
+                            }
+                        ]
+                    }
+                ],
+                "sentinelEntitiesMappings": null
+            }
+        }
+    ]
+}

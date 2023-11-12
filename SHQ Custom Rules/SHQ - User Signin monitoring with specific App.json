@@ -1,0 +1,55 @@
+{
+    "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentTemplate.json#",
+    "contentVersion": "1.0.0.0",
+    "parameters": {
+        "workspace": {
+            "type": "String"
+        }
+    },
+    "resources": [
+        {
+            "id": "[concat(resourceId('Microsoft.OperationalInsights/workspaces/providers', parameters('workspace'), 'Microsoft.SecurityInsights'),'/alertRules/bc18067b-a223-4f17-a607-b3f42ddaec49')]",
+            "name": "[concat(parameters('workspace'),'/Microsoft.SecurityInsights/bc18067b-a223-4f17-a607-b3f42ddaec49')]",
+            "type": "Microsoft.OperationalInsights/workspaces/providers/alertRules",
+            "kind": "Scheduled",
+            "apiVersion": "2022-09-01-preview",
+            "properties": {
+                "displayName": "SHQ - User Signin monitoring with specific App",
+                "description": "Raise P3 for O365 login events",
+                "severity": "Medium",
+                "enabled": false,
+                "query": "SigninLogs\r\n| where UserPrincipalName contains \"user.id\"\r\n| where AppDisplayName contains \"365\"\r\n",
+                "queryFrequency": "PT5M",
+                "queryPeriod": "PT5M",
+                "triggerOperator": "GreaterThan",
+                "triggerThreshold": 0,
+                "suppressionDuration": "PT5H",
+                "suppressionEnabled": false,
+                "tactics": [
+                    "InitialAccess"
+                ],
+                "techniques": [],
+                "alertRuleTemplateName": null,
+                "incidentConfiguration": {
+                    "createIncident": true,
+                    "groupingConfiguration": {
+                        "enabled": false,
+                        "reopenClosedIncident": false,
+                        "lookbackDuration": "PT5H",
+                        "matchingMethod": "AllEntities",
+                        "groupByEntities": [],
+                        "groupByAlertDetails": [],
+                        "groupByCustomDetails": []
+                    }
+                },
+                "eventGroupingSettings": {
+                    "aggregationKind": "AlertPerResult"
+                },
+                "alertDetailsOverride": null,
+                "customDetails": null,
+                "entityMappings": null,
+                "sentinelEntitiesMappings": null
+            }
+        }
+    ]
+}

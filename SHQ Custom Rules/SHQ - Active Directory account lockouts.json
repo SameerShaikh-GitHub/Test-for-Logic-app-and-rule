@@ -1,0 +1,67 @@
+{
+    "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentTemplate.json#",
+    "contentVersion": "1.0.0.0",
+    "parameters": {
+        "workspace": {
+            "type": "String"
+        }
+    },
+    "resources": [
+        {
+            "id": "[concat(resourceId('Microsoft.OperationalInsights/workspaces/providers', parameters('workspace'), 'Microsoft.SecurityInsights'),'/alertRules/e98733d9-7e80-44ec-b155-06b540f7dfb2')]",
+            "name": "[concat(parameters('workspace'),'/Microsoft.SecurityInsights/e98733d9-7e80-44ec-b155-06b540f7dfb2')]",
+            "type": "Microsoft.OperationalInsights/workspaces/providers/alertRules",
+            "kind": "Scheduled",
+            "apiVersion": "2022-09-01-preview",
+            "properties": {
+                "displayName": "SHQ - Active Directory account lockouts",
+                "description": "SHQ: Active Directory account lockouts",
+                "severity": "Medium",
+                "enabled": true,
+                "query": "let threshold = 3;\r\nSecurityEvent\r\n| where EventID == 4740\r\n| summarize StartTime = min(TimeGenerated), EndTime = max(TimeGenerated), LockoutsCount = count() by Activity, Account, TargetSid, TargetDomainName, SourceComputerId, SourceDomainController = Computer\r\n| where LockoutsCount >= threshold",
+                "queryFrequency": "PT5M",
+                "queryPeriod": "PT5M",
+                "triggerOperator": "GreaterThan",
+                "triggerThreshold": 0,
+                "suppressionDuration": "PT5H",
+                "suppressionEnabled": false,
+                "tactics": [
+                    "Impact"
+                ],
+                "techniques": [],
+                "alertRuleTemplateName": null,
+                "incidentConfiguration": {
+                    "createIncident": true,
+                    "groupingConfiguration": {
+                        "enabled": false,
+                        "reopenClosedIncident": false,
+                        "lookbackDuration": "PT5H",
+                        "matchingMethod": "Selected",
+                        "groupByEntities": [
+                            "Account"
+                        ],
+                        "groupByAlertDetails": [],
+                        "groupByCustomDetails": []
+                    }
+                },
+                "eventGroupingSettings": {
+                    "aggregationKind": "AlertPerResult"
+                },
+                "alertDetailsOverride": null,
+                "customDetails": null,
+                "entityMappings": [
+                    {
+                        "entityType": "Account",
+                        "fieldMappings": [
+                            {
+                                "identifier": "FullName",
+                                "columnName": "Account"
+                            }
+                        ]
+                    }
+                ],
+                "sentinelEntitiesMappings": null
+            }
+        }
+    ]
+}

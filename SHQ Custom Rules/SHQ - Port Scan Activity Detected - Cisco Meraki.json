@@ -1,0 +1,67 @@
+{
+    "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentTemplate.json#",
+    "contentVersion": "1.0.0.0",
+    "parameters": {
+        "workspace": {
+            "type": "String"
+        }
+    },
+    "resources": [
+        {
+            "id": "[concat(resourceId('Microsoft.OperationalInsights/workspaces/providers', parameters('workspace'), 'Microsoft.SecurityInsights'),'/alertRules/c1072556-3092-4a12-abe5-af2577539dc1')]",
+            "name": "[concat(parameters('workspace'),'/Microsoft.SecurityInsights/c1072556-3092-4a12-abe5-af2577539dc1')]",
+            "type": "Microsoft.OperationalInsights/workspaces/providers/alertRules",
+            "kind": "Scheduled",
+            "apiVersion": "2022-09-01-preview",
+            "properties": {
+                "displayName": "SHQ - Port Scan ",
+                "description": "single IP to multiple destination on multiple port more than 50 in 10 min",
+                "severity": "Medium",
+                "enabled": true,
+                "query": "let PortScanThreshold = 50;\r\nCiscoMeraki_parsed\r\n| project Device_Name, Log_Type, Action, Src_IP, Client_IP, Client_MAC, Src_MAC, Dst_IP, Protocol, Src_Port, Dst_Port, Event_Type, Message, Alert_Type, User_Agent, URL\r\n| summarize AttemptedPortsCount=dcount(Dst_Port) by Src_IP\r\n| where AttemptedPortsCount > PortScanThreshold",
+                "queryFrequency": "PT10M",
+                "queryPeriod": "PT10M",
+                "triggerOperator": "GreaterThan",
+                "triggerThreshold": 0,
+                "suppressionDuration": "PT5H",
+                "suppressionEnabled": false,
+                "tactics": [
+                    "Reconnaissance"
+                ],
+                "techniques": [
+                    "T1595"
+                ],
+                "alertRuleTemplateName": null,
+                "incidentConfiguration": {
+                    "createIncident": true,
+                    "groupingConfiguration": {
+                        "enabled": false,
+                        "reopenClosedIncident": false,
+                        "lookbackDuration": "PT5H",
+                        "matchingMethod": "AllEntities",
+                        "groupByEntities": [],
+                        "groupByAlertDetails": [],
+                        "groupByCustomDetails": []
+                    }
+                },
+                "eventGroupingSettings": {
+                    "aggregationKind": "SingleAlert"
+                },
+                "alertDetailsOverride": null,
+                "customDetails": null,
+                "entityMappings": [
+                    {
+                        "entityType": "Account",
+                        "fieldMappings": [
+                            {
+                                "identifier": "Name",
+                                "columnName": "Src_IP"
+                            }
+                        ]
+                    }
+                ],
+                "sentinelEntitiesMappings": null
+            }
+        }
+    ]
+}
