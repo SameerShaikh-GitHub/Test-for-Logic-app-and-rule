@@ -1,0 +1,77 @@
+{
+    "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentTemplate.json#",
+    "contentVersion": "1.0.0.0",
+    "parameters": {
+        "workspace": {
+            "type": "String"
+        }
+    },
+    "resources": [
+        {
+            "id": "[concat(resourceId('Microsoft.OperationalInsights/workspaces/providers', parameters('workspace'), 'Microsoft.SecurityInsights'),'/alertRules/81f58ff7-f45c-46f1-aa3d-a335d6469a79')]",
+            "name": "[concat(parameters('workspace'),'/Microsoft.SecurityInsights/81f58ff7-f45c-46f1-aa3d-a335d6469a79')]",
+            "type": "Microsoft.OperationalInsights/workspaces/providers/alertRules",
+            "kind": "Scheduled",
+            "apiVersion": "2022-09-01-preview",
+            "properties": {
+                "displayName": "SHQ - PE file dropped in Color Profile Folder",
+                "description": "This query looks for writes of PE files to C:\\Windows\\System32\\spool\\drivers\\color\\.\n  This is a common directory used by malware, as well as some legitimate programs, and writes of PE files to the folder should be monitored.",
+                "severity": "Medium",
+                "enabled": true,
+                "query": "DeviceFileEvents\n  | where ActionType =~ \"FileCreated\"\n  | where FolderPath has \"C:\\\\Windows\\\\System32\\\\spool\\\\drivers\\\\color\\\\\" \n  | where FileName endswith \".exe\" or FileName endswith \".dll\"",
+                "queryFrequency": "P1D",
+                "queryPeriod": "P1D",
+                "triggerOperator": "GreaterThan",
+                "triggerThreshold": 0,
+                "suppressionDuration": "PT5H",
+                "suppressionEnabled": false,
+                "tactics": [
+                    "Execution"
+                ],
+                "techniques": [
+                    "T1203"
+                ],
+                "alertRuleTemplateName": "f68a5046-b7eb-4f69-9519-1e99708bb9e0",
+                "incidentConfiguration": {
+                    "createIncident": true,
+                    "groupingConfiguration": {
+                        "enabled": false,
+                        "reopenClosedIncident": false,
+                        "lookbackDuration": "PT5H",
+                        "matchingMethod": "AllEntities",
+                        "groupByEntities": [],
+                        "groupByAlertDetails": [],
+                        "groupByCustomDetails": []
+                    }
+                },
+                "eventGroupingSettings": {
+                    "aggregationKind": "SingleAlert"
+                },
+                "alertDetailsOverride": null,
+                "customDetails": null,
+                "entityMappings": [
+                    {
+                        "entityType": "File",
+                        "fieldMappings": [
+                            {
+                                "identifier": "Name",
+                                "columnName": "FileName"
+                            }
+                        ]
+                    },
+                    {
+                        "entityType": "Host",
+                        "fieldMappings": [
+                            {
+                                "identifier": "HostName",
+                                "columnName": "DeviceName"
+                            }
+                        ]
+                    }
+                ],
+                "sentinelEntitiesMappings": null,
+                "templateVersion": "1.0.0"
+            }
+        }
+    ]
+}

@@ -1,0 +1,89 @@
+{
+    "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentTemplate.json#",
+    "contentVersion": "1.0.0.0",
+    "parameters": {
+        "workspace": {
+            "type": "String"
+        }
+    },
+    "resources": [
+        {
+            "id": "[concat(resourceId('Microsoft.OperationalInsights/workspaces/providers', parameters('workspace'), 'Microsoft.SecurityInsights'),'/alertRules/f385cdc5-aac1-43ef-912d-21c33a27a961')]",
+            "name": "[concat(parameters('workspace'),'/Microsoft.SecurityInsights/f385cdc5-aac1-43ef-912d-21c33a27a961')]",
+            "type": "Microsoft.OperationalInsights/workspaces/providers/alertRules",
+            "kind": "Scheduled",
+            "apiVersion": "2022-09-01-preview",
+            "properties": {
+                "displayName": "SHQ - SUNBURST suspicious SolarWinds child processes",
+                "description": "Identifies suspicious child processes of SolarWinds.Orion.Core.BusinessLayer.dll that may be evidence of the SUNBURST backdoor",
+                "severity": "Medium",
+                "enabled": true,
+                "query": "let excludeProcs = dynamic([@\"\\SolarWinds\\Orion\\APM\\APMServiceControl.exe\", @\"\\SolarWinds\\Orion\\ExportToPDFCmd.Exe\", @\"\\SolarWinds.Credentials\\SolarWinds.Credentials.Orion.WebApi.exe\", @\"\\SolarWinds\\Orion\\Topology\\SolarWinds.Orion.Topology.Calculator.exe\", @\"\\SolarWinds\\Orion\\Database-Maint.exe\", @\"\\SolarWinds.Orion.ApiPoller.Service\\SolarWinds.Orion.ApiPoller.Service.exe\", @\"\\Windows\\SysWOW64\\WerFault.exe\"]);\nDeviceProcessEvents\n| where InitiatingProcessFileName =~ \"solarwinds.businesslayerhost.exe\"\n| where not(FolderPath has_any (excludeProcs))\n| extend\n    timestamp = TimeGenerated,\n    AccountCustomEntity = iff(isnotempty(InitiatingProcessAccountUpn), InitiatingProcessAccountUpn, InitiatingProcessAccountName),\n    HostCustomEntity = DeviceName,\n    AlgorithmCustomEntity = \"MD5\",\n    FileHashCustomEntity = MD5",
+                "queryFrequency": "P1D",
+                "queryPeriod": "P1D",
+                "triggerOperator": "GreaterThan",
+                "triggerThreshold": 0,
+                "suppressionDuration": "PT5H",
+                "suppressionEnabled": false,
+                "tactics": [
+                    "Execution",
+                    "Persistence"
+                ],
+                "techniques": [],
+                "alertRuleTemplateName": "4a3073ac-7383-48a9-90a8-eb6716183a54",
+                "incidentConfiguration": {
+                    "createIncident": true,
+                    "groupingConfiguration": {
+                        "enabled": false,
+                        "reopenClosedIncident": false,
+                        "lookbackDuration": "PT5H",
+                        "matchingMethod": "AllEntities",
+                        "groupByEntities": [],
+                        "groupByAlertDetails": [],
+                        "groupByCustomDetails": []
+                    }
+                },
+                "eventGroupingSettings": {
+                    "aggregationKind": "SingleAlert"
+                },
+                "alertDetailsOverride": null,
+                "customDetails": null,
+                "entityMappings": [
+                    {
+                        "entityType": "Account",
+                        "fieldMappings": [
+                            {
+                                "identifier": "FullName",
+                                "columnName": "AccountCustomEntity"
+                            }
+                        ]
+                    },
+                    {
+                        "entityType": "Host",
+                        "fieldMappings": [
+                            {
+                                "identifier": "FullName",
+                                "columnName": "HostCustomEntity"
+                            }
+                        ]
+                    },
+                    {
+                        "entityType": "FileHash",
+                        "fieldMappings": [
+                            {
+                                "identifier": "Algorithm",
+                                "columnName": "AlgorithmCustomEntity"
+                            },
+                            {
+                                "identifier": "Value",
+                                "columnName": "FileHashCustomEntity"
+                            }
+                        ]
+                    }
+                ],
+                "sentinelEntitiesMappings": null,
+                "templateVersion": "1.0.1"
+            }
+        }
+    ]
+}

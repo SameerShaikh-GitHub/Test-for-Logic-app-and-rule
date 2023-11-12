@@ -1,0 +1,88 @@
+{
+    "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentTemplate.json#",
+    "contentVersion": "1.0.0.0",
+    "parameters": {
+        "workspace": {
+            "type": "String"
+        }
+    },
+    "resources": [
+        {
+            "id": "[concat(resourceId('Microsoft.OperationalInsights/workspaces/providers', parameters('workspace'), 'Microsoft.SecurityInsights'),'/alertRules/2ca510df-2b87-49f0-ae1c-d933a3727293')]",
+            "name": "[concat(parameters('workspace'),'/Microsoft.SecurityInsights/2ca510df-2b87-49f0-ae1c-d933a3727293')]",
+            "type": "Microsoft.OperationalInsights/workspaces/providers/alertRules",
+            "kind": "Scheduled",
+            "apiVersion": "2022-09-01-preview",
+            "properties": {
+                "displayName": "SHQ - Windows host username encoded in base64 web request",
+                "description": "This detection will identify network requests in HTTP proxy data that contains Base64 encoded usernames from machines in the DeviceEvents table.\nThis technique was seen usee by POLONIUM in their RunningRAT tool.",
+                "severity": "Medium",
+                "enabled": true,
+                "query": "let accountLookback = 3d;\nlet requestLookback = 3d;\nlet extraction_regex = @\"(?:\\?|&)[a-zA-Z0-9\\%]*=([a-zA-Z0-9\\/\\+\\=]*)\";\n// Collect account names and base64 encode them\nDeviceEvents\n| where TimeGenerated > ago(accountLookback)\n| summarize make_set(DeviceId), make_set(DeviceName) by InitiatingProcessAccountName\n| where isnotempty(InitiatingProcessAccountName)\n| extend base64_user = base64_encode_tostring(InitiatingProcessAccountName)\n| join (\n    // Collect requests and extract base64 parameters\n    CommonSecurityLog\n    | where TimeGenerated > ago(requestLookback)\n    | where isnotempty(RequestURL)\n    // Summarize early on the RequestURL\n    | summarize FirstRequest=min(TimeGenerated), LastRequest=max(TimeGenerated), NumberOfRequests=count() by RequestURL\n    | extend base64_candidate = extract_all(extraction_regex, RequestURL)\n    | mv-expand base64_candidate  to typeof(string)\n) on $left.base64_user == $right.base64_candidate\n| project FirstRequest, LastRequest, NumberOfRequests, RequestURL, DeviceIds=set_DeviceId, DeviceNames=set_DeviceName, UserName=InitiatingProcessAccountName",
+                "queryFrequency": "P1D",
+                "queryPeriod": "P1D",
+                "triggerOperator": "GreaterThan",
+                "triggerThreshold": 0,
+                "suppressionDuration": "PT5H",
+                "suppressionEnabled": false,
+                "tactics": [
+                    "Exfiltration",
+                    "CommandAndControl"
+                ],
+                "techniques": [
+                    "T1041",
+                    "T1071"
+                ],
+                "alertRuleTemplateName": "6e715730-82c0-496c-983b-7a20c4590bd9",
+                "incidentConfiguration": {
+                    "createIncident": true,
+                    "groupingConfiguration": {
+                        "enabled": false,
+                        "reopenClosedIncident": false,
+                        "lookbackDuration": "PT5H",
+                        "matchingMethod": "AllEntities",
+                        "groupByEntities": [],
+                        "groupByAlertDetails": [],
+                        "groupByCustomDetails": []
+                    }
+                },
+                "eventGroupingSettings": {
+                    "aggregationKind": "SingleAlert"
+                },
+                "alertDetailsOverride": null,
+                "customDetails": null,
+                "entityMappings": [
+                    {
+                        "entityType": "Host",
+                        "fieldMappings": [
+                            {
+                                "identifier": "HostName",
+                                "columnName": "DeviceNames"
+                            }
+                        ]
+                    },
+                    {
+                        "entityType": "URL",
+                        "fieldMappings": [
+                            {
+                                "identifier": "Url",
+                                "columnName": "RequestURL"
+                            }
+                        ]
+                    },
+                    {
+                        "entityType": "Account",
+                        "fieldMappings": [
+                            {
+                                "identifier": "Name",
+                                "columnName": "UserName"
+                            }
+                        ]
+                    }
+                ],
+                "sentinelEntitiesMappings": null,
+                "templateVersion": "1.0.0"
+            }
+        }
+    ]
+}
